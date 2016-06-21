@@ -4,7 +4,7 @@ data ShipmentRequestDetails =
        ShipmentRequestDetails
          { amazonOrderId           :: AmazonOrderId
          , sellerOrderId           :: Maybe SellerOrderId
-         , itemList                :: [List]
+         , itemList                :: [Item]
          , shipFromAddress         :: Address
          , packageDimensions       :: PackageDimensions
          , weight                  :: Weight
@@ -30,3 +30,9 @@ newtype TemporarilyUnavailableCarrier =
 
 newtype TermsAndConditionsNotAcceptedCarrier =
           TermsAndConditionsNotAcceptedCarrier CarrierName
+
+data Item =
+       Item
+         { orderItemId :: OrderItemId
+         , quantity    :: Int
+         }
