@@ -11,3 +11,16 @@ data ShipmentRequestDetails =
          , mustArriveByDate        :: Maybe Date
          , shipDate                :: Maybe Date
          , shippingServieceOptions :: ShippingServiceOptions }
+
+data ShippingService =
+       ShippingService
+         { shippingServiceName           :: ShippingServiceName
+         , carrierName                   :: CarrierName
+         , shippingServiceId             :: ShippingServiceId
+         , shippingServiceOfferId        :: ShippingServiceOfferId
+         , shipDate                      :: Date
+         , earliestEstimatedDeliveryDate :: Maybe Date
+         , latestEstimatedDeliveryDate   :: Maybe Date
+         , rate                          :: CurrencyAmount
+         , shippingServiceOptions        :: ShippingServiceOptions
+         }
