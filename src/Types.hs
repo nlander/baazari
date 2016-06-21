@@ -36,3 +36,18 @@ data Item =
          { orderItemId :: OrderItemId
          , quantity    :: Int
          }
+
+data Address =
+       Address
+         { name :: Name
+         , addressLine1        :: AddressLine
+         , addressLine2        :: Maybe AddressLine
+         , addressLine3        :: Maybe AddressLine
+         , districtOrCounty    :: Maybe DistrictOrCounty
+         , email               :: Email
+         , city                :: City
+         , stateOrProvinceCode :: Maybe StateOrProvinceCode
+         , postalCode          :: PostalCode
+         , countryCode         :: CountryCode
+         , phone               :: PhoneNumber
+         }
