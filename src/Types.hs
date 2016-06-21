@@ -24,3 +24,9 @@ data ShippingService =
          , rate                          :: CurrencyAmount
          , shippingServiceOptions        :: ShippingServiceOptions
          }
+
+newtype TemporarilyUnavailableCarrier =
+          TemporarilyUnavailableCarrier CarrierName
+
+newtype TermsAndConditionsNotAcceptedCarrier =
+          TermsAndConditionsNotAcceptedCarrier CarrierName
