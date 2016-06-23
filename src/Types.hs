@@ -78,5 +78,5 @@ data ShippingServiceOptions =
 data CurrencyAmount =
        CurrencyAmount
          { currencyCode :: CurrencyCode
-         , amount       :: CurrencyAmount
+         , amount       :: Amount
          }
