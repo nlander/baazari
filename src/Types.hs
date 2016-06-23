@@ -74,3 +74,9 @@ data ShippingServiceOptions =
          , declaredValue      :: Maybe CurrencyAmount
          , carrierWillPickUp  :: Bool
          }
+
+data CurrencyAmount =
+       CurrencyAmount
+         { currencyCode :: CurrencyCode
+         , amount       :: CurrencyAmount
+         }
