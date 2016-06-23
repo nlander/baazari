@@ -67,3 +67,10 @@ data Weight =
          { value :: Value
          , unit  :: Unit
          }
+
+data ShippingServiceOptions =
+       ShippingServiceOptions
+         { deliveryExperience :: DeliveryExperience
+         , declaredValue      :: Maybe CurrencyAmount
+         , carrierWillPickUp  :: Bool
+         }
