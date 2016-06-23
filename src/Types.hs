@@ -64,10 +64,10 @@ data Item =
 
 data Address =
        Address
-         { name :: Name
+         { name                :: Name
          , addressLine1        :: AddressLine
-         , addressLine2        :: Maybe AddressLine
-         , addressLine3        :: Maybe AddressLine
+         , addressLine2        :: Maybe SecondaryAddressLine
+         , addressLine3        :: Maybe SecondaryAddressLine
          , districtOrCounty    :: Maybe DistrictOrCounty
          , email               :: Email
          , city                :: City
@@ -76,6 +76,38 @@ data Address =
          , countryCode         :: CountryCode
          , phone               :: PhoneNumber
          }
+
+newtype Name = Name Text
+
+makeName :: Text -> Either Text Name
+makeName name
+  | length name == 0  = Left "Empty name"
+  | length name >  30 = Left "Name is too long"
+  | length name <= 30 = Right $ Name name
+
+newtype AddressLine = AddressLine Text
+
+makeAddressLine :: Text -> Either Text AddressLine
+makeAddressLine line
+  | length line == 0   = Left "Empty line"
+  | length line >  180 = Left "line is too long"
+  | length line <= 180 = Right $ AddressLine line
+
+newtype SecondaryAddressLine = SecondaryAddressLine Text
+
+makeSecondaryAddressLine :: Text -> Either Text SecondaryAddressLine
+makeSecondaryAddressLine line
+  | length line == 0  = Left "Empty line"
+  | length line >  60 = Left "line is too long"
+  | length line <= 60 = Right $ SecondaryAddressLine line
+
+newtype DistrictOrCounty = DistrictOrCounty Text
+
+makeName :: Text -> Either Text DistrictOrCounty
+makeName county
+  | length county == 0  = Left "Empty county"
+  | length county >  30 = Left "County is too long"
+  | length county <= 30 = Right $ DistrictOrCounty county
 
 data PackageDimensions =
        PackageDimensions
