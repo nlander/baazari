@@ -3,6 +3,8 @@ module Types where
 
 import Data.Time.ISO8601
        ( UTCTime )
+import Data.ISO3661_CountryCodes
+       ( CountryCode )
 
 data ShipmentRequestDetails =
        ShipmentRequestDetails
@@ -132,6 +134,22 @@ makeStateOrProvinceCode state
   | length state == 0  = Left "Empty state or province code"
   | length state >  30 = Left "State or province code is too long"
   | length state <= 30 = Right $ StateOrProvinceCode state
+
+newtype PostalCode = PostalCode Text
+
+makePostalCode :: Text -> Either Text PostalCode
+makePostalCode code
+  | length code == 0  = Left "Empty postal code"
+  | length code >  30 = Left "Postal code is too long"
+  | length code <= 30 = Right $ PostalCode code
+
+newtype PhoneNumber = PhoneNumber Text
+
+makePhoneNumber :: Text -> Either Text PhoneNumber
+makePhoneNumber number
+  | length number == 0  = Left "Empty phone number"
+  | length number >  30 = Left "Phone number is too long"
+  | length number <= 30 = Right $ PhoneNumber number
 
 data PackageDimensions =
        PackageDimensions
