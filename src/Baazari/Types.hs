@@ -1,4 +1,4 @@
-module Types where
+module Baazari.Types where
 
 data ShipmentRequestDetails =
        ShipmentRequestDetails
