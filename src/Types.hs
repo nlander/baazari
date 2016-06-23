@@ -51,3 +51,13 @@ data Address =
          , countryCode         :: CountryCode
          , phone               :: PhoneNumber
          }
+
+data PackageDimensions =
+       PackageDimensions
+         { length :: Maybe Length
+         , width  :: Maybe Width
+         , height :: Maybe Height
+         , Unit   :: Maybe Unit
+         , predefinedPackageDimensions ::
+             Maybe PredefinedPackageDimensions
+         }
