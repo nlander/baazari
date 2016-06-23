@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Types where
 
+import Data.Time.ISO8601
+       ( UTCTime )
+
 data ShipmentRequestDetails =
        ShipmentRequestDetails
          { amazonOrderId           :: AmazonOrderId
@@ -9,8 +12,8 @@ data ShipmentRequestDetails =
          , shipFromAddress         :: Address
          , packageDimensions       :: PackageDimensions
          , weight                  :: Weight
-         , mustArriveByDate        :: Maybe Date
-         , shipDate                :: Maybe Date
+         , mustArriveByDate        :: Maybe UTCTime
+         , shipDate                :: Maybe UTCTime
          , shippingServieceOptions :: ShippingServiceOptions }
 
 newtype AmazonOrderId = AmazonOrderId Text
@@ -35,9 +38,9 @@ data ShippingService =
          , carrierName                   :: CarrierName
          , shippingServiceId             :: ShippingServiceId
          , shippingServiceOfferId        :: ShippingServiceOfferId
-         , shipDate                      :: Date
-         , earliestEstimatedDeliveryDate :: Maybe Date
-         , latestEstimatedDeliveryDate   :: Maybe Date
+         , shipDate                      :: UTCTime
+         , earliestEstimatedDeliveryDate :: Maybe UTCTime
+         , latestEstimatedDeliveryDate   :: Maybe UTCTime
          , rate                          :: CurrencyAmount
          , shippingServiceOptions        :: ShippingServiceOptions
          }
