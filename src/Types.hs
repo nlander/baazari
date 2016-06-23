@@ -45,6 +45,11 @@ data ShippingService =
          , shippingServiceOptions        :: ShippingServiceOptions
          }
 
+type ShippingServiceName    = Text
+type CarrierName            = Text
+type ShippingServiceId      = Text
+type ShippingServiceOfferId = Text
+
 newtype TemporarilyUnavailableCarrier =
           TemporarilyUnavailableCarrier CarrierName
 
