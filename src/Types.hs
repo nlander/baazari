@@ -156,7 +156,7 @@ data PackageDimensions =
          { length :: Maybe Length
          , width  :: Maybe Width
          , height :: Maybe Height
-         , unit   :: Maybe Unit
+         , unit   :: Maybe LengthUnit
          , predefinedPackageDimensions ::
              Maybe PredefinedPackageDimensions
          }
@@ -182,15 +182,26 @@ makeHeight height
   | height <= 0 = Left "Height must be greater than zero"
   | height >  0 = Right $ Height height
 
-data Unit =
+data LengthUnit =
        Inches
      | Centimeters
 
 data Weight =
        Weight
-         { value :: Value
-         , unit  :: Unit
+         { value :: WeightValue
+         , unit  :: WeightUnit
          }
+
+newtype WeigthValue = WeigthValue Float
+
+makeWeigthValue :: Float -> Either Text WeigthValue
+makeWeigthValue weight
+  | weight <= 0 = Left "Weigth must be greater than zero"
+  | weight >  0 = Right $ WeigthValue weight
+
+data WeightUnit =
+       Ounces
+     | Grams
 
 data ShippingServiceOptions =
        ShippingServiceOptions
