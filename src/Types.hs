@@ -161,6 +161,31 @@ data PackageDimensions =
              Maybe PredefinedPackageDimensions
          }
 
+newtype Length = Length Float
+
+makeLength :: Float -> Either Text Length
+makeLength len
+  | len <= 0 = Left "Length must be greater than zero"
+  | len >  0 = Right $ Length len
+
+newtype Width = Width Float
+
+makeWidth :: Float -> Either Text Width
+makeWidth width
+  | width <= 0 = Left "Width must be greater than zero"
+  | width >  0 = Right $ Width width
+
+newtype Height = Height Float
+
+makeHeight :: Float -> Either Text Height
+makeHeight height
+  | height <= 0 = Left "Height must be greater than zero"
+  | height >  0 = Right $ Height height
+
+data Unit =
+       Inches
+     | Centimeters
+
 data Weight =
        Weight
          { value :: Value
