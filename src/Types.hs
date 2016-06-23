@@ -57,7 +57,7 @@ data PackageDimensions =
          { length :: Maybe Length
          , width  :: Maybe Width
          , height :: Maybe Height
-         , Unit   :: Maybe Unit
+         , unit   :: Maybe Unit
          , predefinedPackageDimensions ::
              Maybe PredefinedPackageDimensions
          }
@@ -80,3 +80,9 @@ data CurrencyAmount =
          { currencyCode :: CurrencyCode
          , amount       :: Amount
          }
+
+data DeliveryExperience =
+         DeliveryConfirmationWithAdultSignature
+       | DeliveryConfirmationWithSignature
+       | DeliveryConfirmationWithoutSignature
+       | NoTracking
