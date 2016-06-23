@@ -61,3 +61,9 @@ data PackageDimensions =
          , predefinedPackageDimensions ::
              Maybe PredefinedPackageDimensions
          }
+
+data Weight =
+       Weight
+         { value :: Value
+         , unit  :: Unit
+         }
