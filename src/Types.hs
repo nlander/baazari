@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Types where
 
 data ShipmentRequestDetails =
@@ -11,6 +12,22 @@ data ShipmentRequestDetails =
          , mustArriveByDate        :: Maybe Date
          , shipDate                :: Maybe Date
          , shippingServieceOptions :: ShippingServiceOptions }
+
+newtype AmazonOrderId = AmazonOrderId Text
+
+makeAmazonOrderId :: Text -> Either Text AmazonOrderId
+makeAmazonOrderId id
+  | length id == 0  = Left "Empty order id"
+  | length id >  50 = Left "Order id is too long"
+  | length id <= 50 = Right $ AmazonOrderId id
+
+newtype SellerOrderId = SellerOrderId Text
+
+makeSellerOrderId :: Text -> Either Text SellerOrderId
+makeSellerOrderId id
+  | length id == 0  = Left "Empty order id"
+  | length id >  64 = Left "Order id is too long"
+  | length id <= 64 = Right $ SellerOrderId id
 
 data ShippingService =
        ShippingService
