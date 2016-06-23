@@ -103,11 +103,35 @@ makeSecondaryAddressLine line
 
 newtype DistrictOrCounty = DistrictOrCounty Text
 
-makeName :: Text -> Either Text DistrictOrCounty
-makeName county
+makeDistrictOrCounty :: Text -> Either Text DistrictOrCounty
+makeDistrictOrCounty county
   | length county == 0  = Left "Empty county"
   | length county >  30 = Left "County is too long"
   | length county <= 30 = Right $ DistrictOrCounty county
+
+newtype Email = Email Text
+
+makeEmail :: Text -> Either Text Email
+makeEmail email
+  | length email == 0   = Left "Empty email"
+  | length email >  256 = Left "Email is too long"
+  | length email <= 256 = Right $ Email email
+
+newtype City = City Text
+
+makeCity :: Text -> Either Text City
+makeCity city
+  | length city == 0  = Left "Empty city name"
+  | length city >  30 = Left "City name is too long"
+  | length city <= 30 = Right $ City city
+
+newtype StateOrProvinceCode = StateOrProvinceCode Text
+
+makeStateOrProvinceCode :: Text -> Either Text StateOrProvinceCode
+makeStateOrProvinceCode state
+  | length state == 0  = Left "Empty state or province code"
+  | length state >  30 = Left "State or province code is too long"
+  | length state <= 30 = Right $ StateOrProvinceCode state
 
 data PackageDimensions =
        PackageDimensions
