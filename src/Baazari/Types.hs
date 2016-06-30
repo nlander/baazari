@@ -7,10 +7,16 @@ import Data.Fixed
 import qualified Data.Text as T
 import Data.Time
 import Text.Email.Validate
-import Data.ByteString.Builder
 
 -- getCurrentDay :: IO Day
 -- getCurrentDay = getCurrentTime >>= return . utctDay
+
+data Endpoint =
+    NorthAmerica
+  | Europe
+  | India
+  | China
+  | Japan
 
 newtype AmazonOrderId =
   AmazonOrderId { unAmazonOrderId :: T.Text }
