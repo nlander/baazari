@@ -2,6 +2,8 @@ module Baazari.Http where
 
 import Baazari.Types
 import Data.ByteString
+import qualified Data.ByteString.Base64 as B64
+import Data.Digest.OpenSSL.HMAC
 import Network.HTTP.Simple
 import Data.ByteString.Builder
 
@@ -32,3 +34,24 @@ makeQuery host =
 --          -> SignatureMethod
 --          -> Timestamp
 
+getEligibleShippingServices :: Endpoint
+                            -> AccessKeyId
+                            -> ShipmentRequestDetails
+                            -> AuthToken
+                            -> [MarketplaceId]
+                            -> SellerId
+                            -> SecretKey
+                            -> Request
+                            -> IO (Response ByteString)
+getEligibleShippingServices ep aId params token mIds sId key req =
+  do
+    signature <- fmap B64.encode $ hmac sha256 key unsigned
+  where unsigned = "POST\n"
+                <> renderEndpoint ep
+                <> "\n/\n"
+                <> renderAccessKeyId aId
+                <> "Action=GetEligibleShippingServices&"
+                <> renderShipmentRequestDetails params
+                <> renderAuthToken token
+                <> renderMarketplaceIds mIds
+                <> renderSellerId sId
