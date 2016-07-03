@@ -2,6 +2,7 @@
 module Baazari.Types where
 
 import Currency
+import Data.ByteString
 import Data.CountryCodes
 import Data.Fixed
 import qualified Data.Text as T
@@ -10,6 +11,10 @@ import Text.Email.Validate
 
 -- getCurrentDay :: IO Day
 -- getCurrentDay = getCurrentTime >>= return . utctDay
+type AccessKeyId = ByteString
+type MarketplaceId = ByteString
+type SellerId = ByteString
+type SecretKey = ByteString
 
 data Endpoint =
     NorthAmerica
