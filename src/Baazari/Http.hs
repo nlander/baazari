@@ -48,6 +48,10 @@ renderEndpoint China =
 renderEndpoint Japan =
   "mws.amazonservices.jp"
 
+-------------------------------------------------------------
+-- MAKING A PARAM LIST OUT OF ShipmetRequestDetails
+-------------------------------------------------------------
+
 renderAmazonOrderId ::
      AmazonOrderId
   -> ByteString
@@ -70,6 +74,9 @@ renderQuantity :: Int -> ByteString
 renderQuantity n =
   toStrict . toLazyByteString . intDec $ n
 
+
+--PARAM LIST FROM [Item]
+
 itemToParams ::
      Int
   -> Item
@@ -90,6 +97,9 @@ itemsToParams ::
   -> [(ByteString, Maybe ByteString)]
 itemsToParams items = mconcat $
   zipWith itemToParams [1..] items
+
+
+--PARAM LIST FROM Address
 
 addressToParams ::
      Address
