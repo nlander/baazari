@@ -122,8 +122,8 @@ data Address =
        Address
          { name                :: AddressName
          , addressLine1        :: AddressLine
-         , addressLine2        :: Maybe AddressLine
-         , addressLine3        :: Maybe AddressLine
+         , addressLine2        :: Maybe SecondaryAddressLine
+         , addressLine3        :: Maybe SecondaryAddressLine
          , districtOrCounty    :: Maybe County
          , email               :: EmailAddress
          , city                :: City
@@ -148,7 +148,9 @@ makeAddressLine line
   | T.length line >  180 = Left "line is too long"
   | T.length line <= 180 = Right $ AddressLine line
 
-newtype SecondaryAddressLine = SecondaryAddressLine T.Text
+newtype SecondaryAddressLine =
+  SecondaryAddressLine { unSecondaryAddressLine :: T.Text }
+  deriving (Eq, Show)
 
 makeSecondaryAddressLine :: T.Text -> Either T.Text SecondaryAddressLine
 makeSecondaryAddressLine line
@@ -156,13 +158,11 @@ makeSecondaryAddressLine line
   | T.length line >  60 = Left "line is too long"
   | T.length line <= 60 = Right $ SecondaryAddressLine line
 
-newtype DistrictOrCounty = DistrictOrCounty T.Text
-
-makeDistrictOrCounty :: T.Text -> Either T.Text DistrictOrCounty
-makeDistrictOrCounty county
+makeCounty :: T.Text -> Either T.Text County
+makeCounty county
   | T.length county == 0  = Left "Empty county"
   | T.length county >  30 = Left "County is too long"
-  | T.length county <= 30 = Right $ DistrictOrCounty county
+  | T.length county <= 30 = Right $ County county
 
 newtype Email = Email T.Text
 

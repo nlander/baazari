@@ -1,6 +1,8 @@
 module Baazari.Http where
 
 import Baazari.Types
+import Data.CountryCodes
+import Text.Email.Validate
 import Data.ByteString
 import qualified Data.ByteString.Base64 as B64
 import Data.Digest.OpenSSL.HMAC
@@ -88,6 +90,87 @@ itemsToParams ::
   -> [(ByteString, Maybe ByteString)]
 itemsToParams items = mconcat $
   zipWith itemToParams [1..] items
+
+addressToParams ::
+     Address
+  -> [(ByteString, Maybe ByteString)]
+addressToParams address =
+  [ toParam "Address.Name"
+      (Just . renderAddressName (name address))
+  , toParam "Address.AddressLine1"
+      (Just . renderAddressLine (addressLine1 address))
+  , toParam "Address.AddressLine2"
+      (renderSecondaryAddressLine (addressLine2 address))
+  , toParam "Address.AddressLine3"
+      (renderSecondaryAddressLine (addressLine3 address))
+  , toParam "Address.DistrictOrCounty"
+      (renderCounty (districtOrCounty address))
+  , toParam "Address.Email"
+      (Just . toByteString (email address))
+  , toParam "Address.City"
+      (Just . renderCity (city address))
+  , toParam "Address.StateOrProvinceCode"
+      (renderState (stateOrProvinceCode address))
+  , toParam "Address.PostalCode"
+      (Just . renderPostalCode (postalCode address))
+  , toParam "Address.CountryCode"
+      (Just . renderCountryCode (countryCode address))
+  , toParam "Address.Phone"
+      (Just . renderPhoneNumber (phone address)) ]
+
+renderAddressName ::
+     AddressName
+  -> ByteString
+renderAddressName a =
+  encodeUtf8 . unAddressName $ a
+
+renderAddressLine ::
+     AddressLine
+  -> ByteString
+renderAddressName a =
+  encodeUtf8 . unAddressName $ a
+
+renderSecondaryAddressLine ::
+     Maybe SecondaryAddressLine
+  -> Maybe ByteString
+renderSecondaryAddressLine a =
+  fmap (encodeUtf8 . unSecondaryAddressName) a
+
+renderCounty ::
+     Maybe County
+  -> Maybe ByteString
+renderCounty c =
+  fmap (encodeUtf8 . unCounty) c
+
+renderCity ::
+     City
+  -> ByteString
+renderCity c =
+  encodeUtf8 . unCity $ c
+
+renderState ::
+     Maybe State
+  -> Maybe ByteString
+renderState s =
+  fmap (encodeUtf8 . unState) s
+
+renderPostalCode ::
+     PostalCode
+  -> ByteString
+renderPostalCode pc =
+  encodeUtf8 . unPostalCode $ pc
+
+renderCountryCode ::
+     CountryCode
+  -> ByteString
+renderCountryCode c =
+  encodeUtf8 . toText $ c
+
+renderPhoneNumber ::
+     PhoneNumber
+  -> ByteString
+renderPhoneNumber n =
+  encodeUtf8 . unPhoneNumber $ n
 
 makeQuery :: Endpoint -> Request
 makeQuery host = 
