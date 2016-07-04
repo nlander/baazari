@@ -6,6 +6,7 @@ import qualified Data.ByteString.Base64 as B64
 import Data.Digest.OpenSSL.HMAC
 import Network.HTTP.Simple
 import Data.ByteString.Builder
+import Data.ByteString.Lazy
 
 accessKeyId :: AccessKeyId
 
@@ -22,9 +23,9 @@ apiVersion :: Version
 apiVersion = "2015-06-01"
 
 toParam :: ByteString
-        -> ByteString
+        -> Maybe ByteString
         -> (ByteString, Maybe ByteString)
-toParam name value = (name, Just value)
+toParam name value = (name, value)
 
 fromParam :: (ByteString, Maybe ByteString)
           -> ByteString
@@ -44,6 +45,49 @@ renderEndpoint China =
   "mws.amazonservices.com.cn"
 renderEndpoint Japan =
   "mws.amazonservices.jp"
+
+renderAmazonOrderId ::
+     AmazonOrderId
+  -> ByteString
+renderAmazonOrderId i =
+  encodeUtf8 . unAmazonOrderId $ i
+
+renderSellerOrderId ::
+     Maybe SellerOrderId
+  -> Maybe ByteString
+renderSellerOrderId i =
+  fmap (encodeUtf8 . unSellerOrderId) i
+
+renderOrderItemId ::
+     OrderItemId
+  -> ByteString
+renderOrderItemId i =
+  encodeUtf8 . unOrderItemId $ i
+
+renderQuantity :: Int -> ByteString
+renderQuantity n =
+  toStrict . toLazyByteString . intDec $ n
+
+itemToParams ::
+     Int
+  -> Item
+  -> [(ByteString, Maybe ByteString)]
+itemToParams itemNumber item =
+  [ ( itemParam <> "OrderItemId"
+    , Just $ renderOrderItemId . orderItemId $ item )
+  , ( itemParam <> "Quantity"
+    , Just $ renderQuantity . quantity $ item ) ]
+  where
+    itemParam =
+         "Item."
+      <> renderQuantity itemNumber
+      <> "."
+
+itemsToParams ::
+     [Item]
+  -> [(ByteString, Maybe ByteString)]
+itemsToParams items = mconcat $
+  zipWith itemToParams [1..] items
 
 makeQuery :: Endpoint -> Request
 makeQuery host = 
