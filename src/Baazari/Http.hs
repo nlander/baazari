@@ -18,10 +18,20 @@ sellerId :: SellerId
 
 secretKey :: SecretKey
 
+apiVersion :: Version
+apiVersion = "2015-06-01"
+
 toParam :: ByteString
         -> ByteString
         -> (ByteString, Maybe ByteString)
 toParam name value = (name, Just value)
+
+fromParam :: (ByteString, Maybe ByteString)
+          -> ByteString
+fromParam (name, value) =
+  if value == Just val
+  then name <> "=" <> val <> "&"
+  else ""
 
 renderEndpoint :: Endpoint -> ByteString
 renderEndpoint NorthAmerica =
@@ -41,15 +51,6 @@ makeQuery host =
   $ setRequestSecure True
   $ setRequestHost (renderEndpoint host)
   $ defaultRequest
---          -> AccessKeyId
---          -> Action
---          -> Parameters
---          -> AuthToken
---          -> Maybe MarketpleceIdList
---          -> SellerId
---          -> SignatureMethod
---          -> Timestamp
-
 --getEligibleShippingServices :: Endpoint
 --                            -> AccessKeyId
 --                            -> ShipmentRequestDetails
@@ -62,11 +63,38 @@ makeQuery host =
 --  do
 --    time <- renderTime <$> getCurrentTime
 --    signature <- fmap B64.encode $ hmac sha256 key $ unsigned time
---  where unsigned time =
---       "POST\n"
---    <> renderEndpoint ep
---    <> "\n/\n"
---    <> renderAccessKeyId aId
+unsignedGetEligibleShippingServices ::
+      Endpoint
+   -> ShipmentRequestDetails
+   -> UTCTime
+   -> ByteString
+unsignedGetEligibleShippingServices ep deets time =
+     genericQueryStringStart ep
+  <> mconcat . fmap fromParam . sort $
+       genericParams time ++
+       idListToParams marketplaceIds ++
+       shipmentRequestDetailsToParams deets
+
+genericQueryStringStart ::
+     Endpoint
+  -> ByteString
+genericQueryStringStart ep =
+     "POST\n"
+  <> renderEndpoint ep
+  <> "\n/\n"
+
+genericParams :: UTCTime
+              -> [ByteString, Maybe ByteString)]
+genericParams time =
+  [ ("AWSAccessKeyId", Just accessKeyId)
+  , ("Action", Just "GetEligibleShippingServices")
+  , ("SellerId", Just sellerId)
+  , ("SignatureMethod", Just "HmacSHA256")
+  , ("SignatureVersion", Just "2")
+  , ("Timestamp", Just (renderTime time))
+  , ("Version", Just apiVersion) ]
+
+renderAccessKeyId aId
 --    <> "Action=GetEligibleShippingServices&"
 --    <> renderShipmentRequestDetails params
 --    <> renderAuthToken token

@@ -15,6 +15,7 @@ type AccessKeyId = ByteString
 type MarketplaceId = ByteString
 type SellerId = ByteString
 type SecretKey = ByteString
+type Version = ByteString
 
 data Endpoint =
     NorthAmerica
