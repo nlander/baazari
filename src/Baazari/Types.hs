@@ -208,21 +208,27 @@ data PackageDimensions =
              Maybe PredefinedPackageDimensions
          }
 
-newtype Length = Length Float
+newtype Length =
+  Length { unLength :: Float }
+  deriving (Eq, Show)
 
 makeLength :: Float -> Either T.Text Length
 makeLength len
   | len <= 0 = Left "Length must be greater than zero"
   | len >  0 = Right $ Length len
 
-newtype Width = Width Float
+newtype Width =
+  Width { unWidth :: Float }
+  deriving (Eq, Show)
 
 makeWidth :: Float -> Either T.Text Width
 makeWidth width
   | width <= 0 = Left "Width must be greater than zero"
   | width >  0 = Right $ Width width
 
-newtype Height = Height Float
+newtype Height =
+  Height { unHeight :: Float }
+  deriving (Eq, Show)
 
 makeHeight :: Float -> Either T.Text Height
 makeHeight height
