@@ -184,6 +184,21 @@ renderPhoneNumber =
 
 --MAKE QUERY PARAMS FROM PackageDimensions
 
+packageDimensionsToParams ::
+     PackageDimensions
+  -> [(ByteString, Maybe ByteString)]
+packageDimensionsToParams dimensions =
+
+weightToParams ::
+     Weight
+  -> [(ByteString, Maybe ByteString)]
+weightToParams weight =
+  [ ( toParam "Weight.Value"
+    , (Just . renderWeightValue (value weight))
+    ( toParam "Weight.Unit"
+    , (Just . renderWeightUnit (unit weight))
+  ]
+
 renderLength ::
      Maybe Length
   -> Maybe ByteString
@@ -266,6 +281,17 @@ renderPredefinedPackageDimensions =
          USPS_SmallFlatRateBox -> "USPS_SmallFlatRateBox"
          USPS_SmallFlatRateEnvelope -> "USPS_SmallFlatRateEnvelope")
 
+renderWeightValue ::
+     WeightValue
+  -> ByteString
+renderWeightValue =
+  toStrict . toLazyByteString . floatDec . unWeightValue
+
+renderWeightUnit ::
+     WeightUnit
+  -> ByteString
+renderWeightUnit Ounces = "ounces"
+renderWeightUnit Grams  = "grams"
 
 makeQuery :: Endpoint -> Request
 makeQuery host = 

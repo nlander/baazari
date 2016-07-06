@@ -245,7 +245,8 @@ data Weight =
          , units :: WeightUnit
          }
 
-newtype WeightValue = WeightValue Float
+newtype WeightValue =
+  WeightValue { unWeightValue :: Float }
 
 makeWeightValue :: Float -> Either T.Text WeightValue
 makeWeightValue weight
