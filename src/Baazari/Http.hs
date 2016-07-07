@@ -188,6 +188,18 @@ packageDimensionsToParams ::
      PackageDimensions
   -> [(ByteString, Maybe ByteString)]
 packageDimensionsToParams dimensions =
+  [ ( toParam "PackageDimensions.Length"
+    , renderLength (len dimensions))
+    ( toParam "PackageDimensions.Width"
+    , renderWidth (width dimensions))
+    ( toParam "PackageDimensions.Height"
+    , renderHeight (height dimensions))
+    ( toParam "PackageDimensions.Unit"
+    , renderLengthUnit (unit dimensions))
+    ( toParam "PackageDimensions.PredefinedPackageDimensions"
+    , renderPredefinedPackageDimensions
+        (predefinedPackageDimensions dimensions))
+  ]
 
 weightToParams ::
      Weight
