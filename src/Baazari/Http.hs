@@ -333,14 +333,14 @@ renderGregorian (year, month, day) =
 
 rendInt :: Int -> ByteString
 rendInt n | 0 <= n && n < 10 =
-              "0"
-           <> ( toStrict
-              . toLazyByteString
-              . intDec ) n
-         | otherwise   =
-           ( toStrict
-           . toLazyByteString
-           . intDec ) n
+                "0"
+             <> ( toStrict
+                . toLazyByteString
+                . intDec ) n
+          | otherwise   =
+            ( toStrict
+            . toLazyByteString
+            . intDec ) n
 
 rendInteger :: Integer -> ByteString
 rendInteger n | 0 <= n && n < 10 =
