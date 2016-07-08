@@ -1,14 +1,18 @@
 module Baazari.Http where
 
 import Baazari.Types
+import Data.Time
+import Data.Time.LocalTime
+import Data.Text.Encoding
+import Data.Monoid
+import Data.Maybe
 import Data.CountryCodes
 import Text.Email.Validate
 import Data.ByteString
 import qualified Data.ByteString.Base64 as B64
-import Data.Digest.OpenSSL.HMAC
 import Network.HTTP.Simple
 import Data.ByteString.Builder
-import Data.ByteString.Lazy
+import Data.ByteString.Lazy (toStrict)
 
 accessKeyId :: AccessKeyId
 
@@ -32,9 +36,9 @@ toParam name value = (name, value)
 fromParam :: (ByteString, Maybe ByteString)
           -> ByteString
 fromParam (name, value) =
-  if value == Just val
-  then name <> "=" <> val <> "&"
-  else ""
+  if value == Nothing
+  then ""
+  else name <> "=" <> fromJust value <> "&"
 
 renderEndpoint :: Endpoint -> ByteString
 renderEndpoint NorthAmerica =
@@ -96,7 +100,7 @@ itemsToParams ::
      [Item]
   -> [(ByteString, Maybe ByteString)]
 itemsToParams items = mconcat $
-  zipWith itemToParams [1..] items
+  Prelude.zipWith itemToParams [1..] items
 
 
 --PARAM LIST FROM Address
@@ -105,28 +109,28 @@ addressToParams ::
      Address
   -> [(ByteString, Maybe ByteString)]
 addressToParams address =
-  [ toParam "Address.Name"
-      (Just . renderAddressName (name address))
-  , toParam "Address.AddressLine1"
-      (Just . renderAddressLine (addressLine1 address))
-  , toParam "Address.AddressLine2"
-      (renderSecondaryAddressLine (addressLine2 address))
-  , toParam "Address.AddressLine3"
-      (renderSecondaryAddressLine (addressLine3 address))
-  , toParam "Address.DistrictOrCounty"
-      (renderCounty (districtOrCounty address))
-  , toParam "Address.Email"
-      (Just . toByteString (email address))
-  , toParam "Address.City"
-      (Just . renderCity (city address))
-  , toParam "Address.StateOrProvinceCode"
-      (renderState (stateOrProvinceCode address))
-  , toParam "Address.PostalCode"
-      (Just . renderPostalCode (postalCode address))
-  , toParam "Address.CountryCode"
-      (Just . renderCountryCode (countryCode address))
-  , toParam "Address.Phone"
-      (Just . renderPhoneNumber (phone address)) ]
+  [ toParam "Address.Name" $
+      Just . renderAddressName $ name address
+  , toParam "Address.AddressLine1" $
+      Just . renderAddressLine $ addressLine1 address
+  , toParam "Address.AddressLine2" $
+      renderSecondaryAddressLine $ addressLine2 address
+  , toParam "Address.AddressLine3" $
+      renderSecondaryAddressLine $ addressLine3 address
+  , toParam "Address.DistrictOrCounty" $
+      renderCounty $ districtOrCounty address
+  , toParam "Address.Email" $
+      Just . toByteString $ email address
+  , toParam "Address.City" $
+      Just . renderCity $ city address
+  , toParam "Address.StateOrProvinceCode" $
+      renderState $ stateOrProvinceCode address
+  , toParam "Address.PostalCode" $
+      Just . renderPostalCode $ postalCode address
+  , toParam "Address.CountryCode" $
+      Just . renderCountryCode $ countryCode address
+  , toParam "Address.Phone" $
+      Just . renderPhoneNumber $ phone address ]
 
 renderAddressName ::
      AddressName
@@ -137,14 +141,14 @@ renderAddressName =
 renderAddressLine ::
      AddressLine
   -> ByteString
-renderAddressName =
-  encodeUtf8 . unAddressName
+renderAddressLine =
+  encodeUtf8 . unAddressLine
 
 renderSecondaryAddressLine ::
      Maybe SecondaryAddressLine
   -> Maybe ByteString
 renderSecondaryAddressLine =
-  fmap (encodeUtf8 . unSecondaryAddressName)
+  fmap (encodeUtf8 . unSecondaryAddressLine)
 
 renderCounty ::
      Maybe County
@@ -188,28 +192,27 @@ packageDimensionsToParams ::
      PackageDimensions
   -> [(ByteString, Maybe ByteString)]
 packageDimensionsToParams dimensions =
-  [ ( toParam "PackageDimensions.Length"
-    , renderLength (len dimensions))
-    ( toParam "PackageDimensions.Width"
-    , renderWidth (width dimensions))
-    ( toParam "PackageDimensions.Height"
-    , renderHeight (height dimensions))
-    ( toParam "PackageDimensions.Unit"
-    , renderLengthUnit (unit dimensions))
-    ( toParam "PackageDimensions.PredefinedPackageDimensions"
-    , renderPredefinedPackageDimensions
-        (predefinedPackageDimensions dimensions))
+  [ ( toParam "PackageDimensions.Length" $
+        renderLength $ len dimensions )
+  , ( toParam "PackageDimensions.Width" $
+        renderWidth $ width dimensions )
+  , ( toParam "PackageDimensions.Height" $
+        renderHeight $ height dimensions )
+  , ( toParam "PackageDimensions.Unit" $
+        renderLengthUnit $ unit dimensions )
+  , ( toParam "PackageDimensions.PredefinedPackageDimensions" $
+        renderPredefinedPackageDimensions $
+          predefinedPackageDimensions dimensions )
   ]
 
 weightToParams ::
      Weight
   -> [(ByteString, Maybe ByteString)]
 weightToParams weight =
-  [ ( toParam "Weight.Value"
-    , (Just . renderWeightValue (value weight))
-    ( toParam "Weight.Unit"
-    , (Just . renderWeightUnit (unit weight))
-  ]
+  [ ( toParam "Weight.Value" $
+      Just . renderWeightValue $ value weight )
+  , ( toParam "Weight.Unit" $
+      Just . renderWeightUnit $ units weight ) ]
 
 renderLength ::
      Maybe Length
@@ -305,6 +308,36 @@ renderWeightUnit ::
 renderWeightUnit Ounces = "ounces"
 renderWeightUnit Grams  = "grams"
 
+renderGregorian ::
+     (Integer, Int, Int)
+  -> ByteString
+renderGregorian (year, month, day) =
+  rendY year <> "-" <> rendMD month <> "-" <> rendMD day
+  where rendY  = toStrict
+               . toLazyByteString
+               . integerDec
+
+rendMD :: Int -> ByteString
+rendMD n | 0 <= n && n < 10 =
+              "0"
+           <> ( toStrict
+              . toLazyByteString
+              . intDec ) n
+         | otherwise   =
+           ( toStrict
+           . toLazyByteString
+           . intDec ) n
+
+renderTimeOfDay ::
+     TimeOfDay
+  -> ByteString
+renderTimeOfDay t =
+     "T"
+  <> ( rendMD
+     . todHour ) t
+  <> ( rendMD
+     . todMin ) t
+
 makeQuery :: Endpoint -> Request
 makeQuery host = 
     setRequestMethod "POST"
@@ -323,17 +356,17 @@ makeQuery host =
 --  do
 --    time <- renderTime <$> getCurrentTime
 --    signature <- fmap B64.encode $ hmac sha256 key $ unsigned time
-unsignedGetEligibleShippingServices ::
-      Endpoint
-   -> ShipmentRequestDetails
-   -> UTCTime
-   -> ByteString
-unsignedGetEligibleShippingServices ep deets time =
-     genericQueryStringStart ep
-  <> mconcat . fmap fromParam . sort $
-       genericParams time ++
-       idListToParams marketplaceIds ++
-       shipmentRequestDetailsToParams deets
+--unsignedGetEligibleShippingServices ::
+--      Endpoint
+--   -> ShipmentRequestDetails
+--   -> UTCTime
+--   -> ByteString
+--unsignedGetEligibleShippingServices ep deets time =
+--     genericQueryStringStart ep
+--  <> mconcat . fmap fromParam . sort $
+--       genericParams time ++
+--       idListToParams marketplaceIds ++
+--       shipmentRequestDetailsToParams deets
 
 genericQueryStringStart ::
      Endpoint
@@ -344,17 +377,17 @@ genericQueryStringStart ep =
   <> "\n/\n"
 
 genericParams :: UTCTime
-              -> [ByteString, Maybe ByteString)]
+              -> [(ByteString, Maybe ByteString)]
 genericParams time =
   [ ("AWSAccessKeyId", Just accessKeyId)
   , ("Action", Just "GetEligibleShippingServices")
   , ("SellerId", Just sellerId)
   , ("SignatureMethod", Just "HmacSHA256")
   , ("SignatureVersion", Just "2")
-  , ("Timestamp", Just (renderTime time))
+--  , ("Timestamp", Just (renderTime time))
   , ("Version", Just apiVersion) ]
 
-renderAccessKeyId aId
+--renderAccessKeyId aId
 --    <> "Action=GetEligibleShippingServices&"
 --    <> renderShipmentRequestDetails params
 --    <> renderAuthToken token
