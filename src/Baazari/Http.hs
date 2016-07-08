@@ -2,7 +2,9 @@ module Baazari.Http where
 
 import Baazari.Types
 import Data.Time
+import Data.Fixed
 import Data.Time.LocalTime
+import Data.Time.Zones.Internal
 import Data.Text.Encoding
 import Data.Monoid
 import Data.Maybe
@@ -308,17 +310,29 @@ renderWeightUnit ::
 renderWeightUnit Ounces = "ounces"
 renderWeightUnit Grams  = "grams"
 
+renderUTCTime ::
+     UTCTime
+  -> ByteString
+renderUTCTime t =
+     (renderDay . utctDay $ t)
+  <> (renderTimeOfDay . timeToTimeOfDay . utctDayTime $ t)
+
+renderDay ::
+     Day
+  -> ByteString
+renderDay = renderGregorian . toGregorian
+
 renderGregorian ::
      (Integer, Int, Int)
   -> ByteString
 renderGregorian (year, month, day) =
-  rendY year <> "-" <> rendMD month <> "-" <> rendMD day
+  rendY year <> "-" <> rendInt month <> "-" <> rendInt day
   where rendY  = toStrict
                . toLazyByteString
                . integerDec
 
-rendMD :: Int -> ByteString
-rendMD n | 0 <= n && n < 10 =
+rendInt :: Int -> ByteString
+rendInt n | 0 <= n && n < 10 =
               "0"
            <> ( toStrict
               . toLazyByteString
@@ -328,15 +342,242 @@ rendMD n | 0 <= n && n < 10 =
            . toLazyByteString
            . intDec ) n
 
+rendInteger :: Integer -> ByteString
+rendInteger n | 0 <= n && n < 10 =
+                   "0"
+                <> ( toStrict
+                   . toLazyByteString
+                   . integerDec ) n
+              | otherwise   =
+                ( toStrict
+                . toLazyByteString
+                . integerDec ) n
+
 renderTimeOfDay ::
      TimeOfDay
   -> ByteString
 renderTimeOfDay t =
      "T"
-  <> ( rendMD
+  <> ( rendInt
      . todHour ) t
-  <> ( rendMD
+  <> "%3A"
+  <> ( rendInt
      . todMin ) t
+  <> "%3A"
+  <> ( rendPico
+     . todSec ) t
+  <> "Z"
+
+rendPico :: Pico -> ByteString
+rendPico p = let smallInt = picoToInteger p `div` 10000000000 in
+     ( rendInteger
+     $ smallInt `div` 100 )
+  <> "."
+  <> ( rendInteger
+     $ smallInt `rem` 100 )
+
+renderDeliveryExperience ::
+     DeliveryExperience
+  -> ByteString
+renderDeliveryExperience de = case de of
+  DeliveryConfirmationWithAdultSignature
+    -> "DeliveryConfirmationWithAdultSignature"
+  DeliveryConfirmationWithSignature
+    -> "DeliveryConfirmationWithSignature"
+  DeliveryConfirmationWithoutSignature
+    -> "DeliveryConfirmationWithoutSignature"
+  NoTracking
+    -> "NoTracking"
+
+renderAmount ::
+     Float
+  -> ByteString
+renderAmount =
+  toStrict . toLazyByteString . floatDec
+
+renderCurrencyCode ::
+     CurrencyCode
+  -> ByteString
+renderCurrencyCode code = case code of
+  AED -> "AED"
+  AFN -> "AFN"
+  ALL -> "ALL"
+  AMD -> "AMD"
+  ANG -> "ANG"
+  AOA -> "AOA"
+  ARS -> "ARS"
+  AUD -> "AUD"
+  AWG -> "AWG"
+  AZN -> "AZN"
+  BAM -> "BAM"
+  BBD -> "BBD"
+  BDT -> "BDT"
+  BGN -> "BGN"
+  BHD -> "BHD"
+  BIF -> "BIF"
+  BMD -> "BMD"
+  BND -> "BND"
+  BOB -> "BOB"
+  BOV -> "BOV"
+  BRL -> "BRL"
+  BSD -> "BSD"
+  BTN -> "BTN"
+  BWP -> "BWP"
+  BYR -> "BYR"
+  BZD -> "BZD"
+  CAD -> "CAD"
+  CDF -> "CDF"
+  CHE -> "CHE"
+  CHF -> "CHF"
+  CHW -> "CHW"
+  CLF -> "CLF"
+  CLP -> "CLP"
+  CNY -> "CNY"
+  COP -> "COP"
+  COU -> "COU"
+  CRC -> "CRC"
+  CUC -> "CUC"
+  CUP -> "CUP"
+  CVE -> "CVE"
+  CZK -> "CZK"
+  DJF -> "DJF"
+  DKK -> "DKK"
+  DOP -> "DOP"
+  DZD -> "DZD"
+  EGP -> "EGP"
+  ERN -> "ERN"
+  ETB -> "ETB"
+  EUR -> "EUR"
+  FJD -> "FJD"
+  FKP -> "FKP"
+  GBP -> "GBP"
+  GEL -> "GEL"
+  GHS -> "GHS"
+  GIP -> "GIP"
+  GMD -> "GMD"
+  GNF -> "GNF"
+  GTQ -> "GTQ"
+  GYD -> "GYD"
+  HKD -> "HKD"
+  HNL -> "HNL"
+  HRK -> "HRK"
+  HTG -> "HTG"
+  HUF -> "HUF"
+  IDR -> "IDR"
+  ILS -> "ILS"
+  INR -> "INR"
+  IQD -> "IQD"
+  IRR -> "IRR"
+  ISK -> "ISK"
+  JMD -> "JMD"
+  JOD -> "JOD"
+  JPY -> "JPY"
+  KES -> "KES"
+  KGS -> "KGS"
+  KHR -> "KHR"
+  KMF -> "KMF"
+  KPW -> "KPW"
+  KRW -> "KRW"
+  KWD -> "KWD"
+  KYD -> "KYD"
+  KZT -> "KZT"
+  LAK -> "LAK"
+  LBP -> "LBP"
+  LKR -> "LKR"
+  LRD -> "LRD"
+  LSL -> "LSL"
+  LYD -> "LYD"
+  MAD -> "MAD"
+  MDL -> "MDL"
+  MGA -> "MGA"
+  MKD -> "MKD"
+  MMK -> "MMK"
+  MNT -> "MNT"
+  MOP -> "MOP"
+  MRO -> "MRO"
+  MUR -> "MUR"
+  MVR -> "MVR"
+  MWK -> "MWK"
+  MXN -> "MXN"
+  MXV -> "MXV"
+  MYR -> "MYR"
+  MZN -> "MZN"
+  NAD -> "NAD"
+  NGN -> "NGN"
+  NIO -> "NIO"
+  NOK -> "NOK"
+  NPR -> "NPR"
+  NZD -> "NZD"
+  OMR -> "OMR"
+  PAB -> "PAB"
+  PEN -> "PEN"
+  PGK -> "PGK"
+  PHP -> "PHP"
+  PKR -> "PKR"
+  PLN -> "PLN"
+  PYG -> "PYG"
+  QAR -> "QAR"
+  RON -> "RON"
+  RSD -> "RSD"
+  RUB -> "RUB"
+  RWF -> "RWF"
+  SAR -> "SAR"
+  SBD -> "SBD"
+  SCR -> "SCR"
+  SDG -> "SDG"
+  SEK -> "SEK"
+  SGD -> "SGD"
+  SHP -> "SHP"
+  SLL -> "SLL"
+  SOS -> "SOS"
+  SRD -> "SRD"
+  SSP -> "SSP"
+  STD -> "STD"
+  SYP -> "SYP"
+  SZL -> "SZL"
+  THB -> "THB"
+  TJS -> "TJS"
+  TMT -> "TMT"
+  TND -> "TND"
+  TOP -> "TOP"
+  TRY -> "TRY"
+  TTD -> "TTD"
+  TWD -> "TWD"
+  TZS -> "TZS"
+  UAH -> "UAH"
+  UGX -> "UGX"
+  USD -> "USD"
+  USN -> "USN"
+  USS -> "USS"
+  UYI -> "UYI"
+  UYU -> "UYU"
+  UZS -> "UZS"
+  VEF -> "VEF"
+  VND -> "VND"
+  VUV -> "VUV"
+  WST -> "WST"
+  XAF -> "XAF"
+  XAG -> "XAG"
+  XAU -> "XAU"
+  XBA -> "XBA"
+  XBB -> "XBB"
+  XBC -> "XBC"
+  XBD -> "XBD"
+  XCD -> "XCD"
+  XDR -> "XDR"
+  XFU -> "XFU"
+  XOF -> "XOF"
+  XPD -> "XPD"
+  XPF -> "XPF"
+  XPT -> "XPT"
+  XSU -> "XSU"
+  XTS -> "XTS"
+  XUA -> "XUA"
+  XXX -> "XXX"
+  YER -> "YER"
+  ZAR -> "ZAR"
+  ZMW -> "ZMW"
+
 
 makeQuery :: Endpoint -> Request
 makeQuery host = 
