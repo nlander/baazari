@@ -8,6 +8,7 @@ import Data.Time.Zones.Internal
 import Data.Text.Encoding
 import Data.Monoid
 import Data.Maybe
+import Data.List
 import Data.CountryCodes
 import Text.Email.Validate
 import Data.ByteString
@@ -668,6 +669,37 @@ makeQuery host =
 --       idListToParams marketplaceIds ++
 --       shipmentRequestDetailsToParams deets
 
+getEligibleShippingServicesUnsigned ::
+     Endpoint
+  -> ShipmentRequestDetails
+  -> IO ByteString
+getEligibleShippingServicesUnsigned ep srds =
+  (\ params ->
+        genericQueryStringStart ep
+     <> flattenParams params )
+  <$> getEligibleShippingServicesUnsignedParams srds
+
+getEligibleShippingServicesUnsignedParams ::
+     ShipmentRequestDetails
+  -> IO [(ByteString, Maybe ByteString)]
+getEligibleShippingServicesUnsignedParams srds =
+      Data.List.sort
+   .  (\ time ->
+            shipmentRequestDetailsToParams srds
+         ++ genericParams time )
+  <$> getCurrentTime
+
+flattenParams ::
+     [(ByteString, Maybe ByteString)]
+  -> ByteString
+flattenParams params = flip (flip Prelude.foldr "") params
+  (\tup acc -> case snd tup of
+    Nothing   -> acc
+    Just val  -> let param = fst tup <> "=" <> val in
+                   if Data.ByteString.null acc
+                   then param
+                   else param <> "&")
+
 genericQueryStringStart ::
      Endpoint
   -> ByteString
@@ -684,7 +716,7 @@ genericParams time =
   , ("SellerId", Just sellerId)
   , ("SignatureMethod", Just "HmacSHA256")
   , ("SignatureVersion", Just "2")
---  , ("Timestamp", Just (renderTime time))
+  , ("Timestamp", Just (renderUTCTime time))
   , ("Version", Just apiVersion) ]
 
 --renderAccessKeyId aId
