@@ -389,6 +389,39 @@ renderDeliveryExperience de = case de of
   NoTracking
     -> "NoTracking"
 
+renderBool ::
+     Bool
+  -> ByteString
+renderBool True  = "true"
+renderBool False = "false"
+
+requestShippingServiceOptionsToParams ::
+     ShippingServiceOptions
+  -> [(ByteString, Maybe ByteString)]
+requestShippingServiceOptionsToParams o =
+  [ toParam "RequestShippingServiceOptions.DeliveryExperience" $
+      Just . renderDeliveryExperience . deliveryExperience $ o
+  , toParam "RequestShippingServiceOptions.CarrierWillPickUp" $
+      Just . renderBool . carrierWillPickUp $ o
+  ] ++ nestParams "RequestShippingServiceOptions."
+         ( declaredValueToParams . declaredValue $ o )
+
+nestParams ::
+     ByteString
+  -> [(ByteString, Maybe ByteString)]
+  -> [(ByteString, Maybe ByteString)]
+nestParams name oldParams =
+  [(name <> fst tup, snd tup) | tup <- oldParams]
+
+declaredValueToParams ::
+     Maybe CurrencyAmount
+  -> [(ByteString, Maybe ByteString)]
+declaredValueToParams c =
+  [ toParam "DeclaredValue.CurrencyCode" $
+      fmap (renderCurrencyCode . currencyCode) c
+  , toParam "DeclaredValue.Amount" $
+      fmap (renderAmount . amount) c ]
+
 renderAmount ::
      Float
   -> ByteString
