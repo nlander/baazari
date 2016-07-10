@@ -56,7 +56,31 @@ renderEndpoint Japan =
 
 -------------------------------------------------------------
 -- MAKING A PARAM LIST OUT OF ShipmetRequestDetails
--------------------------------------------------------------
+------------------------------------------------------------- 
+
+shipmentRequestDetailsToParams ::
+     ShipmentRequestDetails
+  -> [(ByteString, Maybe ByteString)]
+shipmentRequestDetailsToParams srds =
+  [ toParam "ShipmentRequestDetails.AmazonOrderId" $
+      Just . renderAmazonOrderId . amazonOrderId $ srds
+  , toParam "ShipmentRequestDetails.SellerOrderId" $
+      renderSellerOrderId . sellerOrderId $ srds ] ++
+  ( nestParams "ShipmentRequestDetails." $
+      itemsToParams . itemList $ srds ) ++
+  ( nestParams "ShipmentRequestDetails.ShipFrom" $
+      addressToParams . shipFromAddress $ srds ) ++
+  ( nestParams "ShipmentRequestDetails." $
+      packageDimensionsToParams . packageDimensions $ srds ) ++
+  ( nestParams "ShipmentRequestDetails." $
+      weightToParams . weight $ srds ) ++
+  [ toParam "ShipmentRequestDetails.MustArriveByUTCTime" $
+      fmap renderUTCTime . mustArriveByUTCTime $ srds
+  , toParam "ShipmentRequestDetails.RequestShipUTCTime" $
+      fmap renderUTCTime . requestShipUTCTime $ srds ] ++
+  ( nestParams "ShipmentRequestDetails." $
+      requestShippingServiceOptionsToParams
+        . requestShippingServiceOptions $ srds )
 
 renderAmazonOrderId ::
      AmazonOrderId
@@ -375,6 +399,8 @@ rendPico p = let smallInt = picoToInteger p `div` 10000000000 in
   <> "."
   <> ( rendInteger
      $ smallInt `rem` 100 )
+
+--PARAM LIST FROM ShippingServiceOptions
 
 renderDeliveryExperience ::
      DeliveryExperience
