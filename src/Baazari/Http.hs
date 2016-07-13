@@ -12,10 +12,15 @@ import Data.List
 import Data.CountryCodes
 import Text.Email.Validate
 import Data.ByteString
+import Data.ByteArray
+import Crypto.Hash
+import Crypto.MAC.HMAC
 import qualified Data.ByteString.Base64 as B64
 import Network.HTTP.Simple
 import Data.ByteString.Builder
-import Data.ByteString.Lazy (toStrict)
+import qualified Data.ByteString.Lazy as LB
+       (toStrict
+       ,ByteString)
 
 accessKeyId :: AccessKeyId
 
@@ -103,7 +108,7 @@ renderOrderItemId =
 
 renderQuantity :: Int -> ByteString
 renderQuantity =
-  toStrict . toLazyByteString . intDec
+  LB.toStrict . toLazyByteString . intDec
 
 
 --PARAM LIST FROM [Item]
@@ -245,19 +250,19 @@ renderLength ::
      Maybe Length
   -> Maybe ByteString
 renderLength =
-  fmap (toStrict . toLazyByteString . floatDec . unLength)
+  fmap (LB.toStrict . toLazyByteString . floatDec . unLength)
 
 renderWidth ::
      Maybe Width
   -> Maybe ByteString
 renderWidth =
-  fmap (toStrict . toLazyByteString . floatDec . unWidth)
+  fmap (LB.toStrict . toLazyByteString . floatDec . unWidth)
 
 renderHeight ::
      Maybe Height
   -> Maybe ByteString
 renderHeight =
-  fmap (toStrict . toLazyByteString . floatDec . unHeight)
+  fmap (LB.toStrict . toLazyByteString . floatDec . unHeight)
 
 renderLengthUnit ::
      Maybe LengthUnit
@@ -327,7 +332,7 @@ renderWeightValue ::
      WeightValue
   -> ByteString
 renderWeightValue =
-  toStrict . toLazyByteString . floatDec . unWeightValue
+  LB.toStrict . toLazyByteString . floatDec . unWeightValue
 
 renderWeightUnit ::
      WeightUnit
@@ -352,29 +357,29 @@ renderGregorian ::
   -> ByteString
 renderGregorian (year, month, day) =
   rendY year <> "-" <> rendInt month <> "-" <> rendInt day
-  where rendY  = toStrict
+  where rendY  = LB.toStrict
                . toLazyByteString
                . integerDec
 
 rendInt :: Int -> ByteString
 rendInt n | 0 <= n && n < 10 =
                 "0"
-             <> ( toStrict
+             <> ( LB.toStrict
                 . toLazyByteString
                 . intDec ) n
           | otherwise   =
-            ( toStrict
+            ( LB.toStrict
             . toLazyByteString
             . intDec ) n
 
 rendInteger :: Integer -> ByteString
 rendInteger n | 0 <= n && n < 10 =
                    "0"
-                <> ( toStrict
+                <> ( LB.toStrict
                    . toLazyByteString
                    . integerDec ) n
               | otherwise   =
-                ( toStrict
+                ( LB.toStrict
                 . toLazyByteString
                 . integerDec ) n
 
@@ -453,7 +458,7 @@ renderAmount ::
      Float
   -> ByteString
 renderAmount =
-  toStrict . toLazyByteString . floatDec
+  LB.toStrict . toLazyByteString . floatDec
 
 renderCurrencyCode ::
      CurrencyCode
@@ -645,39 +650,39 @@ makeQuery host =
   $ setRequestSecure True
   $ setRequestHost (renderEndpoint host)
   $ defaultRequest
---getEligibleShippingServices :: Endpoint
---                            -> AccessKeyId
---                            -> ShipmentRequestDetails
---                            -> [MarketplaceId]
---                            -> SellerId
---                            -> SecretKey
---                            -> Request
---                            -> IO (Response ByteString)
---getEligibleShippingServices ep aId params token mIds sId key req = undefined
---  do
---    time <- renderTime <$> getCurrentTime
---    signature <- fmap B64.encode $ hmac sha256 key $ unsigned time
---unsignedGetEligibleShippingServices ::
---      Endpoint
---   -> ShipmentRequestDetails
---   -> UTCTime
---   -> ByteString
---unsignedGetEligibleShippingServices ep deets time =
---     genericQueryStringStart ep
---  <> mconcat . fmap fromParam . sort $
---       genericParams time ++
---       idListToParams marketplaceIds ++
---       shipmentRequestDetailsToParams deets
+
+signatureToParam ::
+     ByteString
+  -> [(ByteString, Maybe ByteString)]
+signatureToParam s =
+  [ ( "SecretKey"
+    , Just s ) ]
+
+getEligibleShippingServices ::
+     Endpoint
+  -> ShipmentRequestDetails
+  -> IO (Response LB.ByteString)
+getEligibleShippingServices ep srds = do
+  params <- getEligibleShippingServicesUnsignedParams srds
+  httpLBS $ setRequestQueryString
+          ( request params )
+          $ makeQuery ep
+  where
+    signature params = sign
+              $ getEligibleShippingServicesUnsigned ep params
+    sign :: ByteString -> ByteString
+    sign = convert
+         . hmacGetDigest
+         . (hmac secretKey :: ByteString -> HMAC SHA256)
+    request params = params ++ signatureToParam (signature params)
 
 getEligibleShippingServicesUnsigned ::
      Endpoint
-  -> ShipmentRequestDetails
-  -> IO ByteString
-getEligibleShippingServicesUnsigned ep srds =
-  (\ params ->
-        genericQueryStringStart ep
-     <> flattenParams params )
-  <$> getEligibleShippingServicesUnsignedParams srds
+  -> [(ByteString, Maybe ByteString)]
+  -> ByteString
+getEligibleShippingServicesUnsigned ep params =
+     genericQueryStringStart ep
+  <> flattenParams params
 
 getEligibleShippingServicesUnsignedParams ::
      ShipmentRequestDetails
@@ -718,14 +723,3 @@ genericParams time =
   , ("SignatureVersion", Just "2")
   , ("Timestamp", Just (renderUTCTime time))
   , ("Version", Just apiVersion) ]
-
---renderAccessKeyId aId
---    <> "Action=GetEligibleShippingServices&"
---    <> renderShipmentRequestDetails params
---    <> renderAuthToken token
---    <> renderMarketplaceIds mIds
---    <> renderSellerId sId
---    <> "SignatureMethod=HmacSHA256&"
---    <> "SignatureVersion=2&"
---    <> "Timestamp=" <> time <> "&"
---    <> "Version=2015-10-01"

@@ -22,9 +22,11 @@ library
                      , bytestring
                      , base64-bytestring
                      , country-codes
+                     , cryptonite
                      , currency
                      , email-validate
                      , http-conduit
+                     , memory
                      , text
                      , time
                      , tz
