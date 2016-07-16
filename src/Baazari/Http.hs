@@ -22,16 +22,10 @@ import qualified Data.ByteString.Lazy as LB
        (toStrict
        ,ByteString)
 
-accessKeyId :: AccessKeyId
-
 marketplaceIds :: [MarketplaceId]
 marketplaceIds = [ "A2EUQ1WTGCTBG2"
                  , "ATVPDKIKX0DER"
                  , "A1AM78C64UM0Y8" ]
-
-sellerId :: SellerId
-
-secretKey :: SecretKey
 
 apiVersion :: Version
 apiVersion = "2015-06-01"
@@ -703,7 +697,7 @@ flattenParams params = flip (flip Prelude.foldr "") params
     Just val  -> let param = fst tup <> "=" <> val in
                    if Data.ByteString.null acc
                    then param
-                   else param <> "&")
+                   else param <> "&" <> acc)
 
 genericQueryStringStart ::
      Endpoint
