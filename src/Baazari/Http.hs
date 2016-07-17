@@ -65,7 +65,7 @@ shipmentRequestDetailsToParams srds =
   [ toParam "ShipmentRequestDetails.AmazonOrderId" $
       Just . renderAmazonOrderId . amazonOrderId $ srds
   , toParam "ShipmentRequestDetails.SellerOrderId" $
-      renderSellerOrderId . sellerOrderId $ srds ] ++
+      renderSellerOrderId <$> sellerOrderId srds ] ++
   ( nestParams "ShipmentRequestDetails." $
       itemsToParams . itemList $ srds ) ++
   ( nestParams "ShipmentRequestDetails.ShipFrom" $
@@ -89,10 +89,10 @@ renderAmazonOrderId =
   encodeUtf8 . unAmazonOrderId
 
 renderSellerOrderId ::
-     Maybe SellerOrderId
-  -> Maybe ByteString
+     SellerOrderId
+  -> ByteString
 renderSellerOrderId =
-  fmap (encodeUtf8 . unSellerOrderId)
+  encodeUtf8 . unSellerOrderId
 
 renderOrderItemId ::
      OrderItemId
@@ -140,17 +140,17 @@ addressToParams address =
   , toParam "Address.AddressLine1" $
       Just . renderAddressLine $ addressLine1 address
   , toParam "Address.AddressLine2" $
-      renderSecondaryAddressLine $ addressLine2 address
+      renderSecondaryAddressLine <$> addressLine2 address
   , toParam "Address.AddressLine3" $
-      renderSecondaryAddressLine $ addressLine3 address
+      renderSecondaryAddressLine <$> addressLine3 address
   , toParam "Address.DistrictOrCounty" $
-      renderCounty $ districtOrCounty address
+      renderCounty <$> districtOrCounty address
   , toParam "Address.Email" $
       Just . toByteString $ email address
   , toParam "Address.City" $
       Just . renderCity $ city address
   , toParam "Address.StateOrProvinceCode" $
-      renderState $ stateOrProvinceCode address
+      renderState <$> stateOrProvinceCode address
   , toParam "Address.PostalCode" $
       Just . renderPostalCode $ postalCode address
   , toParam "Address.CountryCode" $
@@ -171,16 +171,16 @@ renderAddressLine =
   encodeUtf8 . unAddressLine
 
 renderSecondaryAddressLine ::
-     Maybe SecondaryAddressLine
-  -> Maybe ByteString
+     SecondaryAddressLine
+  -> ByteString
 renderSecondaryAddressLine =
-  fmap (encodeUtf8 . unSecondaryAddressLine)
+  encodeUtf8 . unSecondaryAddressLine
 
 renderCounty ::
-     Maybe County
-  -> Maybe ByteString
+     County
+  -> ByteString
 renderCounty =
-  fmap (encodeUtf8 . unCounty)
+  encodeUtf8 . unCounty
 
 renderCity ::
      City
@@ -189,10 +189,10 @@ renderCity =
   encodeUtf8 . unCity
 
 renderState ::
-     Maybe State
-  -> Maybe ByteString
+     State
+  -> ByteString
 renderState =
-  fmap (encodeUtf8 . unState)
+  encodeUtf8 . unState
 
 renderPostalCode ::
      PostalCode
@@ -217,19 +217,21 @@ renderPhoneNumber =
 packageDimensionsToParams ::
      PackageDimensions
   -> [(ByteString, Maybe ByteString)]
-packageDimensionsToParams dimensions =
-  [ ( toParam "PackageDimensions.Length" $
-        renderLength $ len dimensions )
-  , ( toParam "PackageDimensions.Width" $
-        renderWidth $ width dimensions )
-  , ( toParam "PackageDimensions.Height" $
-        renderHeight $ height dimensions )
-  , ( toParam "PackageDimensions.Unit" $
-        renderLengthUnit $ unit dimensions )
-  , ( toParam "PackageDimensions.PredefinedPackageDimensions" $
-        renderPredefinedPackageDimensions $
-          predefinedPackageDimensions dimensions )
-  ]
+packageDimensionsToParams dimensions = case dimensions of
+  CustomDimensions{..} ->
+    [ ( toParam "PackageDimensions.Length" $
+          Just $ renderLength len )
+    , ( toParam "PackageDimensions.Width" $
+          Just $ renderWidth width )
+    , ( toParam "PackageDimensions.Height" $
+          Just $ renderHeight height )
+    , ( toParam "PackageDimensions.Unit" $
+          Just $ renderLengthUnit unit ) ]
+  PredefinedDimensions{..} ->
+    [ ( toParam "PackageDimensions.PredefinedPackageDimensions" $
+          Just $ renderPredefinedPackageDimensions
+                   predefinedPackageDimensions )
+    ]
 
 weightToParams ::
      Weight
@@ -241,36 +243,33 @@ weightToParams weight =
       Just . renderWeightUnit $ units weight ) ]
 
 renderLength ::
-     Maybe Length
-  -> Maybe ByteString
+     Length
+  -> ByteString
 renderLength =
-  fmap (LB.toStrict . toLazyByteString . floatDec . unLength)
+  LB.toStrict . toLazyByteString . floatDec . unLength
 
 renderWidth ::
-     Maybe Width
-  -> Maybe ByteString
+     Width
+  -> ByteString
 renderWidth =
-  fmap (LB.toStrict . toLazyByteString . floatDec . unWidth)
+  LB.toStrict . toLazyByteString . floatDec . unWidth
 
 renderHeight ::
-     Maybe Height
-  -> Maybe ByteString
+     Height
+  -> ByteString
 renderHeight =
-  fmap (LB.toStrict . toLazyByteString . floatDec . unHeight)
+  LB.toStrict . toLazyByteString . floatDec . unHeight
 
 renderLengthUnit ::
-     Maybe LengthUnit
-  -> Maybe ByteString
-renderLengthUnit =
-  fmap (\unit -> case unit of
-         Inches -> "inches"
-         Centimeters -> "centimeters")
+     LengthUnit
+  -> ByteString
+renderLengthUnit Inches      = "inches"
+renderLengthUnit Centimeters = "centimeters"
 
 renderPredefinedPackageDimensions ::
-     Maybe PredefinedPackageDimensions
-  -> Maybe ByteString
-renderPredefinedPackageDimensions =
-  fmap (\predefined -> case predefined of
+     PredefinedPackageDimensions
+  -> ByteString
+renderPredefinedPackageDimensions predefined = case predefined of
          FedEx_Box_10kg -> "FedEx_Box_10kg"
          FedEx_Box_25kg -> "FedEx_Box_25kg"
          FedEx_Box_Extra_Large_1 -> "FedEx_Box_Extra_Large_1"
@@ -320,7 +319,7 @@ renderPredefinedPackageDimensions =
          USPS_RegionalRateBoxB2 -> "USPS_RegionalRateBoxB2"
          USPS_RegionalRateBoxC -> "USPS_RegionalRateBoxC"
          USPS_SmallFlatRateBox -> "USPS_SmallFlatRateBox"
-         USPS_SmallFlatRateEnvelope -> "USPS_SmallFlatRateEnvelope")
+         USPS_SmallFlatRateEnvelope -> "USPS_SmallFlatRateEnvelope"
 
 renderWeightValue ::
      WeightValue
@@ -429,8 +428,9 @@ requestShippingServiceOptionsToParams o =
       Just . renderDeliveryExperience . deliveryExperience $ o
   , toParam "RequestShippingServiceOptions.CarrierWillPickUp" $
       Just . renderBool . carrierWillPickUp $ o
-  ] ++ nestParams "RequestShippingServiceOptions."
-         ( declaredValueToParams . declaredValue $ o )
+  ] ++ ( nestParams "RequestShippingServiceOptions."
+       . fromMaybe [("", Nothing)]
+       $ declaredValueToParams <$> declaredValue o )
 
 nestParams ::
      ByteString
@@ -440,13 +440,13 @@ nestParams name oldParams =
   [(name <> fst tup, snd tup) | tup <- oldParams]
 
 declaredValueToParams ::
-     Maybe CurrencyAmount
+     CurrencyAmount
   -> [(ByteString, Maybe ByteString)]
 declaredValueToParams c =
   [ toParam "DeclaredValue.CurrencyCode" $
-      fmap (renderCurrencyCode . currencyCode) c
+      Just . renderCurrencyCode . currencyCode $ c
   , toParam "DeclaredValue.Amount" $
-      fmap (renderAmount . amount) c ]
+      Just . renderAmount . amount $ c ]
 
 renderAmount ::
      Float
@@ -654,10 +654,13 @@ signatureToParam s =
 
 getEligibleShippingServices ::
      Endpoint
+  -> SecretKey
+  -> SellerId
+  -> AccessKeyId
   -> ShipmentRequestDetails
   -> IO (Response LB.ByteString)
-getEligibleShippingServices ep srds = do
-  params <- getEligibleShippingServicesUnsignedParams srds
+getEligibleShippingServices ep sk sid akid srds = do
+  params <- getEligibleShippingServicesUnsignedParams sid akid srds
   httpLBS $ setRequestQueryString
           ( request params )
           $ makeQuery ep
@@ -667,7 +670,7 @@ getEligibleShippingServices ep srds = do
     sign :: ByteString -> ByteString
     sign = convert
          . hmacGetDigest
-         . (hmac secretKey :: ByteString -> HMAC SHA256)
+         . (hmac sk :: ByteString -> HMAC SHA256)
     request params = params ++ signatureToParam (signature params)
 
 getEligibleShippingServicesUnsigned ::
@@ -679,13 +682,15 @@ getEligibleShippingServicesUnsigned ep params =
   <> flattenParams params
 
 getEligibleShippingServicesUnsignedParams ::
-     ShipmentRequestDetails
+     SellerId
+  -> AccessKeyId
+  -> ShipmentRequestDetails
   -> IO [(ByteString, Maybe ByteString)]
-getEligibleShippingServicesUnsignedParams srds =
+getEligibleShippingServicesUnsignedParams sid akid srds =
       Data.List.sort
    .  (\ time ->
             shipmentRequestDetailsToParams srds
-         ++ genericParams time )
+         ++ genericParams time sid akid )
   <$> getCurrentTime
 
 flattenParams ::
@@ -708,11 +713,13 @@ genericQueryStringStart ep =
   <> "\n/\n"
 
 genericParams :: UTCTime
+              -> SellerId
+              -> AccessKeyId
               -> [(ByteString, Maybe ByteString)]
-genericParams time =
-  [ ("AWSAccessKeyId", Just accessKeyId)
+genericParams time sid akid =
+  [ ("AWSAccessKeyId", Just akid)
   , ("Action", Just "GetEligibleShippingServices")
-  , ("SellerId", Just sellerId)
+  , ("SellerId", Just sid)
   , ("SignatureMethod", Just "HmacSHA256")
   , ("SignatureVersion", Just "2")
   , ("Timestamp", Just (renderUTCTime time))
