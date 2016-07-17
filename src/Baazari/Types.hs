@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Baazari.Types where
 
-import Currency
 import Data.ByteString
 import Data.CountryCodes
 import Data.Fixed
@@ -69,7 +68,7 @@ data ShippingService =
          , serviceShipUTCTime               :: UTCTime
          , earliestEstimatedDeliveryUTCTime :: Maybe UTCTime
          , latestEstimatedDeliveryUTCTime   :: Maybe UTCTime
-         , rate                             :: (Fixed E2, Currency)
+         , rate                             :: CurrencyAmount
          , shippingServiceOptions           :: ShippingServiceOptions
          }
 
@@ -199,14 +198,14 @@ makePhoneNumber number
   | T.length number <= 30 = Right $ PhoneNumber number
 
 data PackageDimensions =
-       PackageDimensions
-         { len    :: Maybe Length
-         , width  :: Maybe Width
-         , height :: Maybe Height
-         , unit   :: Maybe LengthUnit
-         , predefinedPackageDimensions ::
-             Maybe PredefinedPackageDimensions
-         }
+         CustomDimensions
+           { len    :: Length
+           , width  :: Width
+           , height :: Height
+           , unit   :: LengthUnit }
+       | PredefinedDimensions
+           { predefinedPackageDimensions ::
+               PredefinedPackageDimensions }
 
 newtype Length =
   Length { unLength :: Float }
