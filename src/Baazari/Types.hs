@@ -1,34 +1,34 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Baazari.Types where
 
-import Currency
+import Data.ByteString
 import Data.CountryCodes
 import Data.Fixed
-import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time
 import Text.Email.Validate
 
 -- getCurrentDay :: IO Day
 -- getCurrentDay = getCurrentTime >>= return . utctDay
+type AccessKeyId = ByteString
+type MarketplaceId = ByteString
+type SellerId = ByteString
+type SecretKey = ByteString
+type Version = ByteString
 
-data ShippingServiceOptions =
-  ShippingServiceOptions
+data Endpoint =
+    NorthAmerica
+  | Europe
+  | India
+  | China
+  | Japan
 
 newtype AmazonOrderId =
-  AmazonOrderId { unAmazonOrderId :: Text }
+  AmazonOrderId { unAmazonOrderId :: T.Text }
   deriving (Eq, Show)
 
 newtype SellerOrderId =
-  SellerOrderId { unSellerOrderId :: Text }
-  deriving (Eq, Show)
-
--- Can we get more structured than this? Does it matter?
-newtype PackageDimensions =
-  PackageDimensions { unPackageDimensions :: Text }
-  deriving (Eq, Show)
-
--- grams
-data Weight =
-  Weight { unWeight :: Integer }
+  SellerOrderId { unSellerOrderId :: T.Text }
   deriving (Eq, Show)
 
 data ShipmentRequestDetails =
@@ -44,19 +44,19 @@ data ShipmentRequestDetails =
          , requestShippingServiceOptions  :: ShippingServiceOptions }
 
 newtype ShippingServiceName =
-  ShippingServiceName { unShippingServiceName :: Text }
+  ShippingServiceName { unShippingServiceName :: T.Text }
   deriving (Eq, Show)
 
 newtype CarrierName =
-  CarrierName { unCarrierName :: Text }
+  CarrierName { unCarrierName :: T.Text }
   deriving (Eq, Show)
 
 newtype ShippingServiceId =
-  ShippingServiceId { unShippingServiceId :: Text }
+  ShippingServiceId { unShippingServiceId :: T.Text }
   deriving (Eq, Show)
 
 newtype ShippingServiceOfferId =
-  ShippingServiceOfferId { unShippingServiceOfferId :: Text }
+  ShippingServiceOfferId { unShippingServiceOfferId :: T.Text }
   deriving (Eq, Show)
 
 data ShippingService =
@@ -68,7 +68,7 @@ data ShippingService =
          , serviceShipUTCTime               :: UTCTime
          , earliestEstimatedDeliveryUTCTime :: Maybe UTCTime
          , latestEstimatedDeliveryUTCTime   :: Maybe UTCTime
-         , rate                             :: (Fixed E2, Currency)
+         , rate                             :: CurrencyAmount
          , shippingServiceOptions           :: ShippingServiceOptions
          }
 
@@ -79,7 +79,7 @@ newtype TermsAndConditionsNotAcceptedCarrier =
           TermsAndConditionsNotAcceptedCarrier CarrierName
 
 newtype OrderItemId =
-  OrderItemId { unOrderItemId :: Text }
+  OrderItemId { unOrderItemId :: T.Text }
   deriving (Eq, Show)
 
 data Item =
@@ -89,40 +89,40 @@ data Item =
          }
 
 newtype AddressName =
-  AddressName { unAddressName :: Text }
+  AddressName { unAddressName :: T.Text }
   deriving (Eq, Show)
 
 newtype AddressLine =
-  AddressLine { unAddressLine :: Text }
+  AddressLine { unAddressLine :: T.Text }
   deriving (Eq, Show)
 
 newtype City =
-  City { unCity :: Text }
+  City { unCity :: T.Text }
   deriving (Eq, Show)
 
 newtype County =
-  County { unCounty :: Text }
+  County { unCounty :: T.Text }
   deriving (Eq, Show)
 
 -- or "province"
 newtype State =
-  State { unState :: Text }
+  State { unState :: T.Text }
   deriving (Eq, Show)
 
 newtype PostalCode =
-  PostalCode { unPostalCode :: Text }
+  PostalCode { unPostalCode :: T.Text }
   deriving (Eq, Show)
 
 newtype PhoneNumber =
-  PhoneNumber { unPhoneNumber :: Text }
+  PhoneNumber { unPhoneNumber :: T.Text }
   deriving (Eq, Show)
 
 data Address =
        Address
          { name                :: AddressName
          , addressLine1        :: AddressLine
-         , addressLine2        :: Maybe AddressLine
-         , addressLine3        :: Maybe AddressLine
+         , addressLine2        :: Maybe SecondaryAddressLine
+         , addressLine3        :: Maybe SecondaryAddressLine
          , districtOrCounty    :: Maybe County
          , email               :: EmailAddress
          , city                :: City
@@ -133,105 +133,103 @@ data Address =
          , phone               :: PhoneNumber
          }
 
-newtype Name = Name Text
+newtype Name = Name T.Text
 
-makeName :: Text -> Either Text Name
+makeName :: T.Text -> Either T.Text Name
 makeName name
-  | length name == 0  = Left "Empty name"
-  | length name >  30 = Left "Name is too long"
-  | length name <= 30 = Right $ Name name
+  | T.length name == 0  = Left "Empty name"
+  | T.length name >  30 = Left "Name is too long"
+  | T.length name <= 30 = Right $ Name name
 
-newtype AddressLine = AddressLine Text
-
-makeAddressLine :: Text -> Either Text AddressLine
+makeAddressLine :: T.Text -> Either T.Text AddressLine
 makeAddressLine line
-  | length line == 0   = Left "Empty line"
-  | length line >  180 = Left "line is too long"
-  | length line <= 180 = Right $ AddressLine line
+  | T.length line == 0   = Left "Empty line"
+  | T.length line >  180 = Left "line is too long"
+  | T.length line <= 180 = Right $ AddressLine line
 
-newtype SecondaryAddressLine = SecondaryAddressLine Text
+newtype SecondaryAddressLine =
+  SecondaryAddressLine { unSecondaryAddressLine :: T.Text }
+  deriving (Eq, Show)
 
-makeSecondaryAddressLine :: Text -> Either Text SecondaryAddressLine
+makeSecondaryAddressLine :: T.Text -> Either T.Text SecondaryAddressLine
 makeSecondaryAddressLine line
-  | length line == 0  = Left "Empty line"
-  | length line >  60 = Left "line is too long"
-  | length line <= 60 = Right $ SecondaryAddressLine line
+  | T.length line == 0  = Left "Empty line"
+  | T.length line >  60 = Left "line is too long"
+  | T.length line <= 60 = Right $ SecondaryAddressLine line
 
-newtype DistrictOrCounty = DistrictOrCounty Text
+makeCounty :: T.Text -> Either T.Text County
+makeCounty county
+  | T.length county == 0  = Left "Empty county"
+  | T.length county >  30 = Left "County is too long"
+  | T.length county <= 30 = Right $ County county
 
-makeDistrictOrCounty :: Text -> Either Text DistrictOrCounty
-makeDistrictOrCounty county
-  | length county == 0  = Left "Empty county"
-  | length county >  30 = Left "County is too long"
-  | length county <= 30 = Right $ DistrictOrCounty county
+newtype Email = Email T.Text
 
-newtype Email = Email Text
-
-makeEmail :: Text -> Either Text Email
+makeEmail :: T.Text -> Either T.Text Email
 makeEmail email
-  | length email == 0   = Left "Empty email"
-  | length email >  256 = Left "Email is too long"
-  | length email <= 256 = Right $ Email email
+  | T.length email == 0   = Left "Empty email"
+  | T.length email >  256 = Left "Email is too long"
+  | T.length email <= 256 = Right $ Email email
 
-newtype City = City Text
-
-makeCity :: Text -> Either Text City
+makeCity :: T.Text -> Either T.Text City
 makeCity city
-  | length city == 0  = Left "Empty city name"
-  | length city >  30 = Left "City name is too long"
-  | length city <= 30 = Right $ City city
+  | T.length city == 0  = Left "Empty city name"
+  | T.length city >  30 = Left "City name is too long"
+  | T.length city <= 30 = Right $ City city
 
-newtype StateOrProvinceCode = StateOrProvinceCode Text
+newtype StateOrProvinceCode = StateOrProvinceCode T.Text
 
-makeStateOrProvinceCode :: Text -> Either Text StateOrProvinceCode
+makeStateOrProvinceCode :: T.Text -> Either T.Text StateOrProvinceCode
 makeStateOrProvinceCode state
-  | length state == 0  = Left "Empty state or province code"
-  | length state >  30 = Left "State or province code is too long"
-  | length state <= 30 = Right $ StateOrProvinceCode state
+  | T.length state == 0  = Left "Empty state or province code"
+  | T.length state >  30 = Left "State or province code is too long"
+  | T.length state <= 30 = Right $ StateOrProvinceCode state
 
-newtype PostalCode = PostalCode Text
-
-makePostalCode :: Text -> Either Text PostalCode
+makePostalCode :: T.Text -> Either T.Text PostalCode
 makePostalCode code
-  | length code == 0  = Left "Empty postal code"
-  | length code >  30 = Left "Postal code is too long"
-  | length code <= 30 = Right $ PostalCode code
+  | T.length code == 0  = Left "Empty postal code"
+  | T.length code >  30 = Left "Postal code is too long"
+  | T.length code <= 30 = Right $ PostalCode code
 
-newtype PhoneNumber = PhoneNumber Text
-
-makePhoneNumber :: Text -> Either Text PhoneNumber
+makePhoneNumber :: T.Text -> Either T.Text PhoneNumber
 makePhoneNumber number
-  | length number == 0  = Left "Empty phone number"
-  | length number >  30 = Left "Phone number is too long"
-  | length number <= 30 = Right $ PhoneNumber number
+  | T.length number == 0  = Left "Empty phone number"
+  | T.length number >  30 = Left "Phone number is too long"
+  | T.length number <= 30 = Right $ PhoneNumber number
 
 data PackageDimensions =
-       PackageDimensions
-         { length :: Maybe Length
-         , width  :: Maybe Width
-         , height :: Maybe Height
-         , unit   :: Maybe LengthUnit
-         , predefinedPackageDimensions ::
-             Maybe PredefinedPackageDimensions
-         }
+         CustomDimensions
+           { len    :: Length
+           , width  :: Width
+           , height :: Height
+           , unit   :: LengthUnit }
+       | PredefinedDimensions
+           { predefinedPackageDimensions ::
+               PredefinedPackageDimensions }
 
-newtype Length = Length Float
+newtype Length =
+  Length { unLength :: Float }
+  deriving (Eq, Show)
 
-makeLength :: Float -> Either Text Length
+makeLength :: Float -> Either T.Text Length
 makeLength len
   | len <= 0 = Left "Length must be greater than zero"
   | len >  0 = Right $ Length len
 
-newtype Width = Width Float
+newtype Width =
+  Width { unWidth :: Float }
+  deriving (Eq, Show)
 
-makeWidth :: Float -> Either Text Width
+makeWidth :: Float -> Either T.Text Width
 makeWidth width
   | width <= 0 = Left "Width must be greater than zero"
   | width >  0 = Right $ Width width
 
-newtype Height = Height Float
+newtype Height =
+  Height { unHeight :: Float }
+  deriving (Eq, Show)
 
-makeHeight :: Float -> Either Text Height
+makeHeight :: Float -> Either T.Text Height
 makeHeight height
   | height <= 0 = Left "Height must be greater than zero"
   | height >  0 = Right $ Height height
@@ -243,15 +241,16 @@ data LengthUnit =
 data Weight =
        Weight
          { value :: WeightValue
-         , unit  :: WeightUnit
+         , units :: WeightUnit
          }
 
-newtype WeigthValue = WeigthValue Float
+newtype WeightValue =
+  WeightValue { unWeightValue :: Float }
 
-makeWeigthValue :: Float -> Either Text WeigthValue
-makeWeigthValue weight
+makeWeightValue :: Float -> Either T.Text WeightValue
+makeWeightValue weight
   | weight <= 0 = Left "Weigth must be greater than zero"
-  | weight >  0 = Right $ WeigthValue weight
+  | weight >  0 = Right $ WeightValue weight
 
 data WeightUnit =
        Ounces
@@ -273,7 +272,7 @@ data DeliveryExperience =
 data CurrencyAmount =
        CurrencyAmount
          { currencyCode :: CurrencyCode
-         , amount       :: Amount
+         , amount       :: Float
          }
 
 data PredefinedPackageDimensions =
