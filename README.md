@@ -1,1 +1,1 @@
-# Baazari
+# Bazaari
