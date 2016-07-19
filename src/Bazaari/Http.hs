@@ -1,6 +1,6 @@
-module Baazari.Http where
+module Bazaari.Http where
 
-import Baazari.Types
+import Bazaari.Types
 import Data.Time
 import Data.Fixed
 import Data.Time.LocalTime

@@ -1,7 +1,7 @@
 module Main where
 
-import Baazari.Types
-import Baazari.Http
+import Bazaari.Types
+import Bazaari.Http
 import Data.CountryCodes
 import Data.Time
 import Test.Hspec

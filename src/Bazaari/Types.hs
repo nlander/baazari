@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Baazari.Types where
+module Bazaari.Types where
 
 import Data.ByteString
 import Data.CountryCodes
