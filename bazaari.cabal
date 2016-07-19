@@ -25,6 +25,7 @@ library
                      , cryptonite
                      , email-validate
                      , http-conduit
+                     , http-types
                      , memory
                      , text
                      , time

@@ -17,6 +17,7 @@ import Crypto.Hash
 import Crypto.MAC.HMAC
 import qualified Data.ByteString.Base64 as B64
 import Network.HTTP.Simple
+import Network.HTTP.Types.Header
 import Data.ByteString.Builder
 import qualified Data.ByteString.Lazy as LB
        (toStrict
@@ -652,6 +653,9 @@ signatureToParam s =
   [ ( "SecretKey"
     , Just s ) ]
 
+bazaariHeader :: Request -> Request
+bazaariHeader = addRequestHeader hUserAgent "bazaari/0.1.0.0 (Language=Haskell)"
+
 getEligibleShippingServices ::
      Endpoint
   -> SecretKey
@@ -661,7 +665,8 @@ getEligibleShippingServices ::
   -> IO (Response LB.ByteString)
 getEligibleShippingServices ep sk sid akid srds = do
   params <- getEligibleShippingServicesUnsignedParams sid akid srds
-  httpLBS $ setRequestQueryString
+  httpLBS $ bazaariHeader
+          $ setRequestQueryString
           ( request params )
           $ makeQuery ep
   where
