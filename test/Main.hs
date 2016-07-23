@@ -50,6 +50,10 @@ sample_ShipmentRequestDetails =
 
 main :: IO ()
 main = hspec $ do
-  describe "Test stub" $ do
-    it "Test stub" $ do
-      2 + 2 `shouldBe` 4
+  describe "Unsigned Query" $ do
+    it "Test ShippingRequestDetails should produce a proper unsigned query string." $ do
+      now <- getCurrentTime
+      getEligibleShippingServicesUnsigned $
+          getEligibleShippingServicesUnsignedParams
+            sellerId accessKeyId sample_ShipmentRequestDetails now
+        `shouldBe` sample_QueryString now
