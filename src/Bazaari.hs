@@ -4,3 +4,4 @@ module Bazaari
     ) where
 
 import Bazaari.Types
+import Bazaari.Http

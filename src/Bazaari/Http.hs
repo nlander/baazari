@@ -660,18 +660,21 @@ getEligibleShippingServices ::
   -> ShipmentRequestDetails
   -> IO (Response LB.ByteString)
 getEligibleShippingServices ep sk sid akid srds = do
-  params <- getEligibleShippingServicesUnsignedParams sid akid srds
+  time <- getCurrentTime
   httpLBS $ setRequestQueryString
-          ( request params )
+          ( request time )
           $ makeQuery ep
   where
     signature params = sign
               $ getEligibleShippingServicesUnsigned ep params
+    params time = getEligibleShippingServicesUnsignedParams
+               sid akid srds time
     sign :: ByteString -> ByteString
     sign = convert
          . hmacGetDigest
          . (hmac sk :: ByteString -> HMAC SHA256)
-    request params = params ++ signatureToParam (signature params)
+    request time = params time
+                ++ signatureToParam (signature $ params time)
 
 getEligibleShippingServicesUnsigned ::
      Endpoint
@@ -685,13 +688,12 @@ getEligibleShippingServicesUnsignedParams ::
      SellerId
   -> AccessKeyId
   -> ShipmentRequestDetails
-  -> IO [(ByteString, Maybe ByteString)]
-getEligibleShippingServicesUnsignedParams sid akid srds =
-      Data.List.sort
-   .  (\ time ->
-            shipmentRequestDetailsToParams srds
-         ++ genericParams time sid akid )
-  <$> getCurrentTime
+  -> UTCTime
+  -> [(ByteString, Maybe ByteString)]
+getEligibleShippingServicesUnsignedParams sid akid srds time =
+  Data.List.sort $
+       shipmentRequestDetailsToParams srds
+    ++ genericParams time sid akid
 
 flattenParams ::
      [(ByteString, Maybe ByteString)]
