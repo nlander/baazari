@@ -15,7 +15,6 @@ import Data.ByteString
 import Data.ByteArray
 import Crypto.Hash
 import Crypto.MAC.HMAC
-import qualified Data.ByteString.Base64 as B64
 import Network.HTTP.Simple
 import Data.ByteString.Builder
 import qualified Data.ByteString.Lazy as LB
@@ -103,6 +102,10 @@ renderOrderItemId =
 renderQuantity :: Int -> ByteString
 renderQuantity =
   LB.toStrict . toLazyByteString . intDec
+
+renderEnvironmentVariable :: String -> ByteString
+renderEnvironmentVariable =
+  LB.toStrict . toLazyByteString . stringUtf8
 
 
 --PARAM LIST FROM [Item]

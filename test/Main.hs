@@ -3,6 +3,8 @@ module Main where
 import Bazaari.Types
 import Bazaari.Http
 import Data.CountryCodes
+import Data.ByteString
+import System.Environment
 import Data.Time
 import Test.Hspec
 import Text.Email.Validate
@@ -48,12 +50,24 @@ sample_ShipmentRequestDetails =
                 , amount = 44.99 }
           , carrierWillPickUp = True } }
 
+sample_QueryString :: IO (ByteString, UTCTime)
+sample_QueryString = do
+  now <- getCurrentTime
+  sellerId <- getEnv "MWS_DEV_SELLER_ID"
+  accessKeyId <- getEnv "MWS_DEV_ACCESS_KEY_ID"
+  return ("POST\nmws.amazonservices.com\n/\n", now)
+
+envBS :: String -> IO ByteString
+envBS envVar = renderEnvironmentVariable <$> getEnv envVar
+
 main :: IO ()
 main = hspec $ do
   describe "Unsigned Query" $ do
     it "Test ShippingRequestDetails should produce a proper unsigned query string." $ do
-      now <- getCurrentTime
-      getEligibleShippingServicesUnsigned $
-          getEligibleShippingServicesUnsignedParams
-            sellerId accessKeyId sample_ShipmentRequestDetails now
-        `shouldBe` sample_QueryString now
+      (str, now) <- sample_QueryString
+      sellerId <- envBS "MWS_DEV_SELLER_ID"
+      accessKeyId <- envBS "MWS_DEV_ACCESS_KEY_ID"
+      getEligibleShippingServicesUnsigned NorthAmerica
+        (getEligibleShippingServicesUnsignedParams
+          sellerId accessKeyId sample_ShipmentRequestDetails now)
+        `shouldBe` str
