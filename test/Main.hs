@@ -53,9 +53,13 @@ sample_ShipmentRequestDetails =
 sample_QueryString :: IO (ByteString, UTCTime)
 sample_QueryString = do
   now <- getCurrentTime
-  sellerId <- getEnv "MWS_DEV_SELLER_ID"
-  accessKeyId <- getEnv "MWS_DEV_ACCESS_KEY_ID"
-  return ("POST\nmws.amazonservices.com\n/\n", now)
+  sellerId <- envBS "MWS_DEV_SELLER_ID"
+  accessKeyId <- envBS "MWS_DEV_ACCESS_KEY_ID"
+  return ( "POST\nmws.amazonservices.com\n/\nAWSAccessKeyId="
+        <> accessKeyId
+        <> "&Action=GetEligibleShippingServices&SellerId="
+        <> sellerId
+	<> "&ShipmentRequestDetails.AmazonOrderId=123&ShipmentRequestDetails.Item.1.OrderItemId=456&ShipmentRequestDetails.Item.1.Quantity=2&ShipmentRequestDetails.Item.2.OrderItemId=789&ShipmentRequestDetails.Item.2.Quantity=1&ShipmentRequestDetails.MustArriveByUTCTime=2016-07-25T12%3A30%3A00.00Z&ShipmentRequestDetails.PackageDimensions.PredefinedPackageDimensions=FedEx_Tube&ShipmentRequestDetails.RequestShippingServiceOptions.CarrierWillPickUp=true&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.Amount=44.99&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.CurrencyCode=USD&ShipmentRequestDetails.RequestShippingServiceOptions.DeliveryExperience=DeliveryConfirmationWithAdultSignature&ShipmentRequestDetails.ShipFromAddress.AddressLine1=123 Anywhere Dr&ShipmentRequestDetails.ShipFromAddress.City=Somewheresville&ShipmentRequestDetails.ShipFromAddress.CountryCode=US&ShipmentRequestDetails.ShipFromAddress.Email=leslie_generic_1234@somesite.com&ShipmentRequestDetails.ShipFromAddress.Name=Leslie Generic&ShipmentRequestDetails.ShipFromAddress.Phone=123-456-7890&ShipmentRequestDetails.ShipFromAddress.PostalCode=33133&ShipmentRequestDetails.ShipFromAddress.StateOrProvinceCode=FL&ShipmentRequestDetails.Weight.Unit=ounces&ShipmentRequestDetails.Weight.Value=30.5&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2016-07-27T04%3A24%3A57.48Z&Version=2015-06-01", now)
 
 envBS :: String -> IO ByteString
 envBS envVar = renderEnvironmentVariable <$> getEnv envVar
@@ -63,7 +67,7 @@ envBS envVar = renderEnvironmentVariable <$> getEnv envVar
 main :: IO ()
 main = hspec $ do
   describe "Unsigned Query" $ do
-    it "Test ShippingRequestDetails should produce a proper unsigned query string." $ do
+    it "Test ShipmentRequestDetails should produce a proper unsigned query string." $ do
       (str, now) <- sample_QueryString
       sellerId <- envBS "MWS_DEV_SELLER_ID"
       accessKeyId <- envBS "MWS_DEV_ACCESS_KEY_ID"
