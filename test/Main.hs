@@ -9,7 +9,11 @@ import System.Environment
 import Data.Time
 import Test.Hspec
 import Text.Email.Validate
+import Network.HTTP.Simple
 import Network.HTTP.Types.URI
+import qualified Data.ByteString.Lazy as LB
+       (toStrict
+       ,ByteString)
 
 sample_ShipmentRequestDetails :: ShipmentRequestDetails
 sample_ShipmentRequestDetails =
@@ -55,7 +59,7 @@ sample_ShipmentRequestDetails =
 sample_QueryString :: IO (ByteString, UTCTime)
 sample_QueryString = do
   now <- getCurrentTime
-  sellerId <- envBS "MWS_DEV_SELLER_ID"
+  sellerId <- envBS "MWS_SELLER_ID"
   accessKeyId <- envBS "MWS_DEV_ACCESS_KEY_ID"
   return ( "POST\nmws.amazonservices.com\n/\nAWSAccessKeyId="
         <> accessKeyId
@@ -68,12 +72,32 @@ sample_QueryString = do
 envBS :: String -> IO ByteString
 envBS envVar = renderEnvironmentVariable <$> getEnv envVar
 
+sendRequest :: IO (Response LB.ByteString)
+sendRequest = do
+  (sk, sid, akid) <- getCreds
+  getEligibleShippingServices NorthAmerica sk sid akid sample_ShipmentRequestDetails
+
+makeRequest :: IO Request
+makeRequest = do
+  now <- getCurrentTime
+  (sk, sid, akid) <- getCreds
+  return $ getEligibleShippingServicesRequest
+             NorthAmerica sk sid akid
+               sample_ShipmentRequestDetails now
+
+getCreds :: IO (ByteString, ByteString, ByteString)
+getCreds = do
+  sk <- envBS "MWS_DEV_SECRET_KEY"
+  sid <- envBS "MWS_SELLER_ID"
+  akid <- envBS "MWS_DEV_ACCESS_KEY_ID"
+  return (sk, sid, akid)
+
 main :: IO ()
 main = hspec $ do
   describe "Unsigned Query" $ do
     it "Test ShipmentRequestDetails should produce a proper unsigned query string." $ do
       (str, now) <- sample_QueryString
-      sellerId <- envBS "MWS_DEV_SELLER_ID"
+      sellerId <- envBS "MWS_SELLER_ID"
       accessKeyId <- envBS "MWS_DEV_ACCESS_KEY_ID"
       getEligibleShippingServicesUnsigned NorthAmerica
         (getEligibleShippingServicesUnsignedParams
