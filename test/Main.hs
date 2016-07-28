@@ -2,12 +2,14 @@ module Main where
 
 import Bazaari.Types
 import Bazaari.Http
+import Data.Monoid
 import Data.CountryCodes
 import Data.ByteString
 import System.Environment
 import Data.Time
 import Test.Hspec
 import Text.Email.Validate
+import Network.HTTP.Types.URI
 
 sample_ShipmentRequestDetails :: ShipmentRequestDetails
 sample_ShipmentRequestDetails =
@@ -59,7 +61,9 @@ sample_QueryString = do
         <> accessKeyId
         <> "&Action=GetEligibleShippingServices&SellerId="
         <> sellerId
-	<> "&ShipmentRequestDetails.AmazonOrderId=123&ShipmentRequestDetails.Item.1.OrderItemId=456&ShipmentRequestDetails.Item.1.Quantity=2&ShipmentRequestDetails.Item.2.OrderItemId=789&ShipmentRequestDetails.Item.2.Quantity=1&ShipmentRequestDetails.MustArriveByUTCTime=2016-07-25T12%3A30%3A00.00Z&ShipmentRequestDetails.PackageDimensions.PredefinedPackageDimensions=FedEx_Tube&ShipmentRequestDetails.RequestShippingServiceOptions.CarrierWillPickUp=true&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.Amount=44.99&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.CurrencyCode=USD&ShipmentRequestDetails.RequestShippingServiceOptions.DeliveryExperience=DeliveryConfirmationWithAdultSignature&ShipmentRequestDetails.ShipFromAddress.AddressLine1=123 Anywhere Dr&ShipmentRequestDetails.ShipFromAddress.City=Somewheresville&ShipmentRequestDetails.ShipFromAddress.CountryCode=US&ShipmentRequestDetails.ShipFromAddress.Email=leslie_generic_1234@somesite.com&ShipmentRequestDetails.ShipFromAddress.Name=Leslie Generic&ShipmentRequestDetails.ShipFromAddress.Phone=123-456-7890&ShipmentRequestDetails.ShipFromAddress.PostalCode=33133&ShipmentRequestDetails.ShipFromAddress.StateOrProvinceCode=FL&ShipmentRequestDetails.Weight.Unit=ounces&ShipmentRequestDetails.Weight.Value=30.5&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2016-07-27T04%3A24%3A57.48Z&Version=2015-06-01", now)
+        <> "&ShipmentRequestDetails.AmazonOrderId=123&ShipmentRequestDetails.Item.1.OrderItemId=456&ShipmentRequestDetails.Item.1.Quantity=2&ShipmentRequestDetails.Item.2.OrderItemId=789&ShipmentRequestDetails.Item.2.Quantity=1&ShipmentRequestDetails.MustArriveByUTCTime=2016-07-25T12%3A30%3A00.00Z&ShipmentRequestDetails.PackageDimensions.PredefinedPackageDimensions=FedEx_Tube&ShipmentRequestDetails.RequestShipUTCTime&ShipmentRequestDetails.RequestShippingServiceOptions.CarrierWillPickUp=true&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.Amount=44.99&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.CurrencyCode=USD&ShipmentRequestDetails.RequestShippingServiceOptions.DeliveryExperience=DeliveryConfirmationWithAdultSignature&ShipmentRequestDetails.SellerOrderId&ShipmentRequestDetails.ShipFromAddress.AddressLine1=123%20Anywhere%20Dr&ShipmentRequestDetails.ShipFromAddress.AddressLine2&ShipmentRequestDetails.ShipFromAddress.AddressLine3&ShipmentRequestDetails.ShipFromAddress.City=Somewheresville&ShipmentRequestDetails.ShipFromAddress.CountryCode=US&ShipmentRequestDetails.ShipFromAddress.DistrictOrCounty&ShipmentRequestDetails.ShipFromAddress.Email=leslie_generic_1234%40somesite.com&ShipmentRequestDetails.ShipFromAddress.Name=Leslie%20Generic&ShipmentRequestDetails.ShipFromAddress.Phone=123-456-7890&ShipmentRequestDetails.ShipFromAddress.PostalCode=33133&ShipmentRequestDetails.ShipFromAddress.StateOrProvinceCode=FL&ShipmentRequestDetails.Weight.Unit=ounces&ShipmentRequestDetails.Weight.Value=30.5&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp="
+        <> ( urlEncode True . renderUTCTime $ now )
+        <>  "&Version=2015-06-01", now)
 
 envBS :: String -> IO ByteString
 envBS envVar = renderEnvironmentVariable <$> getEnv envVar

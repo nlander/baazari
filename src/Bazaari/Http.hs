@@ -16,6 +16,7 @@ import Data.ByteArray
 import Crypto.Hash
 import Crypto.MAC.HMAC
 import Network.HTTP.Simple
+import Network.HTTP.Types.URI
 import Data.ByteString.Builder
 import qualified Data.ByteString.Lazy as LB
        (toStrict
@@ -386,10 +387,10 @@ renderTimeOfDay t =
      "T"
   <> ( rendInt
      . todHour ) t
-  <> "%3A"
+  <> ":"
   <> ( rendInt
      . todMin ) t
-  <> "%3A"
+  <> ":"
   <> ( rendPico
      . todSec ) t
   <> "Z"
@@ -685,7 +686,7 @@ getEligibleShippingServicesUnsigned ::
   -> ByteString
 getEligibleShippingServicesUnsigned ep params =
      genericQueryStringStart ep
-  <> flattenParams params
+  <> renderQuery False params
 
 getEligibleShippingServicesUnsignedParams ::
      SellerId
@@ -697,17 +698,6 @@ getEligibleShippingServicesUnsignedParams sid akid srds time =
   Data.List.sort $
        shipmentRequestDetailsToParams srds
     ++ genericParams time sid akid
-
-flattenParams ::
-     [(ByteString, Maybe ByteString)]
-  -> ByteString
-flattenParams params = flip (flip Prelude.foldr "") params
-  (\tup acc -> case snd tup of
-    Nothing   -> acc
-    Just val  -> let param = fst tup <> "=" <> val in
-                   if Data.ByteString.null acc
-                   then param
-                   else param <> "&" <> acc)
 
 genericQueryStringStart ::
      Endpoint
