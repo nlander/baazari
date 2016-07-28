@@ -664,11 +664,19 @@ getEligibleShippingServices ::
   -> AccessKeyId
   -> ShipmentRequestDetails
   -> IO (Response LB.ByteString)
-getEligibleShippingServices ep sk sid akid srds = do
-  time <- getCurrentTime
-  httpLBS $ setRequestQueryString
-          ( request time )
-          $ makeQuery ep
+getEligibleShippingServices ep sk sid akid srds =
+  httpLBS =<< ( getEligibleShippingServicesRequest ep sk sid akid srds <$> getCurrentTime )
+
+getEligibleShippingServicesRequest ::
+     Endpoint
+  -> SecretKey
+  -> SellerId
+  -> AccessKeyId
+  -> ShipmentRequestDetails
+  -> UTCTime
+  -> Request
+getEligibleShippingServicesRequest ep sk sid akid srds time =
+  setRequestQueryString ( request time ) $ makeQuery ep
   where
     signature params = encode . sign
               $ getEligibleShippingServicesUnsigned ep params
