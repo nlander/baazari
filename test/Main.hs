@@ -59,7 +59,7 @@ sample_ShipmentRequestDetails =
 sample_QueryString :: IO (ByteString, UTCTime)
 sample_QueryString = do
   now <- getCurrentTime
-  sellerId <- envBS "MWS_DEV_SELLER_ID"
+  sellerId <- envBS "MWS_SELLER_ID"
   accessKeyId <- envBS "MWS_DEV_ACCESS_KEY_ID"
   return ( "POST\nmws.amazonservices.com\n/\nAWSAccessKeyId="
         <> accessKeyId
