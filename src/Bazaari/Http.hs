@@ -654,7 +654,7 @@ signatureToParam ::
      ByteString
   -> [(ByteString, Maybe ByteString)]
 signatureToParam s =
-  [ ( "SecretKey"
+  [ ( "Signature"
     , Just s ) ]
 
 getEligibleShippingServices ::
