@@ -18,6 +18,7 @@ import Crypto.MAC.HMAC
 import Network.HTTP.Simple
 import Network.HTTP.Types.URI
 import Data.ByteString.Builder
+import Data.ByteString.Base64
 import qualified Data.ByteString.Lazy as LB
        (toStrict
        ,ByteString)
@@ -669,7 +670,7 @@ getEligibleShippingServices ep sk sid akid srds = do
           ( request time )
           $ makeQuery ep
   where
-    signature params = sign
+    signature params = encode . sign
               $ getEligibleShippingServicesUnsigned ep params
     params time = getEligibleShippingServicesUnsignedParams
                sid akid srds time
@@ -695,7 +696,7 @@ getEligibleShippingServicesUnsignedParams ::
   -> UTCTime
   -> [(ByteString, Maybe ByteString)]
 getEligibleShippingServicesUnsignedParams sid akid srds time =
-  Data.List.sort $
+  Data.List.sort . Prelude.filter (\(_,val) -> isJust val) $
        shipmentRequestDetailsToParams srds
     ++ genericParams time sid akid
 
