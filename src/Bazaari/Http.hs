@@ -15,9 +15,10 @@ import Data.ByteString
 import Data.ByteArray
 import Crypto.Hash
 import Crypto.MAC.HMAC
-import qualified Data.ByteString.Base64 as B64
 import Network.HTTP.Simple
+import Network.HTTP.Types.URI
 import Data.ByteString.Builder
+import Data.ByteString.Base64
 import qualified Data.ByteString.Lazy as LB
        (toStrict
        ,ByteString)
@@ -103,6 +104,10 @@ renderOrderItemId =
 renderQuantity :: Int -> ByteString
 renderQuantity =
   LB.toStrict . toLazyByteString . intDec
+
+renderEnvironmentVariable :: String -> ByteString
+renderEnvironmentVariable =
+  LB.toStrict . toLazyByteString . stringUtf8
 
 
 --PARAM LIST FROM [Item]
@@ -383,10 +388,10 @@ renderTimeOfDay t =
      "T"
   <> ( rendInt
      . todHour ) t
-  <> "%3A"
+  <> ":"
   <> ( rendInt
      . todMin ) t
-  <> "%3A"
+  <> ":"
   <> ( rendPico
      . todSec ) t
   <> "Z"
@@ -660,18 +665,21 @@ getEligibleShippingServices ::
   -> ShipmentRequestDetails
   -> IO (Response LB.ByteString)
 getEligibleShippingServices ep sk sid akid srds = do
-  params <- getEligibleShippingServicesUnsignedParams sid akid srds
+  time <- getCurrentTime
   httpLBS $ setRequestQueryString
-          ( request params )
+          ( request time )
           $ makeQuery ep
   where
-    signature params = sign
+    signature params = encode . sign
               $ getEligibleShippingServicesUnsigned ep params
+    params time = getEligibleShippingServicesUnsignedParams
+               sid akid srds time
     sign :: ByteString -> ByteString
     sign = convert
          . hmacGetDigest
          . (hmac sk :: ByteString -> HMAC SHA256)
-    request params = params ++ signatureToParam (signature params)
+    request time = params time
+                ++ signatureToParam (signature $ params time)
 
 getEligibleShippingServicesUnsigned ::
      Endpoint
@@ -679,30 +687,18 @@ getEligibleShippingServicesUnsigned ::
   -> ByteString
 getEligibleShippingServicesUnsigned ep params =
      genericQueryStringStart ep
-  <> flattenParams params
+  <> renderQuery False params
 
 getEligibleShippingServicesUnsignedParams ::
      SellerId
   -> AccessKeyId
   -> ShipmentRequestDetails
-  -> IO [(ByteString, Maybe ByteString)]
-getEligibleShippingServicesUnsignedParams sid akid srds =
-      Data.List.sort
-   .  (\ time ->
-            shipmentRequestDetailsToParams srds
-         ++ genericParams time sid akid )
-  <$> getCurrentTime
-
-flattenParams ::
-     [(ByteString, Maybe ByteString)]
-  -> ByteString
-flattenParams params = flip (flip Prelude.foldr "") params
-  (\tup acc -> case snd tup of
-    Nothing   -> acc
-    Just val  -> let param = fst tup <> "=" <> val in
-                   if Data.ByteString.null acc
-                   then param
-                   else param <> "&" <> acc)
+  -> UTCTime
+  -> [(ByteString, Maybe ByteString)]
+getEligibleShippingServicesUnsignedParams sid akid srds time =
+  Data.List.sort . Prelude.filter (\(_,val) -> isJust val) $
+       shipmentRequestDetailsToParams srds
+    ++ genericParams time sid akid
 
 genericQueryStringStart ::
      Endpoint
