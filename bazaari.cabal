@@ -25,6 +25,7 @@ library
                      , cryptonite
                      , email-validate
                      , http-client
+                     , http-client-tls
                      , http-conduit
                      , http-types
                      , memory
@@ -37,7 +38,7 @@ library
 
 test-suite bazaari-test
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
+  hs-source-dirs:      src test
   main-is:             Main.hs
   build-depends:       base
                      , bazaari

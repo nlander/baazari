@@ -18,6 +18,7 @@ import Crypto.MAC.HMAC
 import Network.HTTP.Simple
 import Network.HTTP.Types.URI
 import Network.HTTP.Client
+import Network.HTTP.Client.TLS
 import Data.ByteString.Builder
 import Data.ByteString.Base64
 import qualified Data.ByteString.Lazy as LB
@@ -46,6 +47,7 @@ fromParam (name, value) =
 
 renderEndpoint :: Endpoint -> ByteString
 renderEndpoint NorthAmerica =
+  -- "mws.amazonservices.com"
   "mws.amazonservices.com"
 renderEndpoint Europe =
   "mws-eu.amazonservices.com"
@@ -665,8 +667,11 @@ getEligibleShippingServices ::
   -> AccessKeyId
   -> ShipmentRequestDetails
   -> IO (Response LB.ByteString)
-getEligibleShippingServices ep sk sid akid srds =
-  httpLBS =<< ( getEligibleShippingServicesRequest ep sk sid akid srds <$> getCurrentTime )
+getEligibleShippingServices ep sk sid akid srds = do
+  manager <- newManager $ managerSetProxy noProxy tlsManagerSettings
+  setGlobalManager manager
+  request <- getEligibleShippingServicesRequest ep sk sid akid srds <$> getCurrentTime
+  httpLBS (request { port = 443 })
 
 getEligibleShippingServicesRequest ::
      Endpoint
