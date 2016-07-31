@@ -17,6 +17,7 @@ import Crypto.Hash
 import Crypto.MAC.HMAC
 import Network.HTTP.Simple
 import Network.HTTP.Types.URI
+import Network.HTTP.Client
 import Data.ByteString.Builder
 import Data.ByteString.Base64
 import qualified Data.ByteString.Lazy as LB
@@ -676,8 +677,9 @@ getEligibleShippingServicesRequest ::
   -> UTCTime
   -> Request
 getEligibleShippingServicesRequest ep sk sid akid srds time =
-  setRequestQueryString ( request time ) $ makeQuery ep
+   (\req -> req { queryString = qs } ) $ makeQuery ep
   where
+    qs = renderQuery False $ request time
     signature params = encode . sign
               $ getEligibleShippingServicesUnsigned ep params
     params time = getEligibleShippingServicesUnsignedParams
