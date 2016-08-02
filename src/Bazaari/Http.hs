@@ -126,7 +126,7 @@ itemToParams itemNumber item =
     , Just $ renderQuantity . quantity $ item ) ]
   where
     itemParam =
-         "Item."
+         "ItemList.Item."
       <> renderQuantity itemNumber
       <> "."
 
@@ -650,6 +650,7 @@ makeQuery :: Endpoint -> Request
 makeQuery host = 
     setRequestMethod "POST"
   $ setRequestSecure True
+  $ setRequestPort 443
   $ setRequestHost (renderEndpoint host)
   $ defaultRequest
 
@@ -671,7 +672,7 @@ getEligibleShippingServices ep sk sid akid srds = do
   manager <- newManager $ managerSetProxy noProxy tlsManagerSettings
   setGlobalManager manager
   request <- getEligibleShippingServicesRequest ep sk sid akid srds <$> getCurrentTime
-  httpLBS (request { port = 443 })
+  httpLBS request
 
 getEligibleShippingServicesRequest ::
      Endpoint
