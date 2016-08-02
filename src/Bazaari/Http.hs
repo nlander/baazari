@@ -126,7 +126,7 @@ itemToParams itemNumber item =
     , Just $ renderQuantity . quantity $ item ) ]
   where
     itemParam =
-         "Item."
+         "ItemList.Item."
       <> renderQuantity itemNumber
       <> "."
 
@@ -432,11 +432,11 @@ requestShippingServiceOptionsToParams ::
      ShippingServiceOptions
   -> [(ByteString, Maybe ByteString)]
 requestShippingServiceOptionsToParams o =
-  [ toParam "RequestShippingServiceOptions.DeliveryExperience" $
+  [ toParam "ShippingServiceOptions.DeliveryExperience" $
       Just . renderDeliveryExperience . deliveryExperience $ o
-  , toParam "RequestShippingServiceOptions.CarrierWillPickUp" $
+  , toParam "ShippingServiceOptions.CarrierWillPickUp" $
       Just . renderBool . carrierWillPickUp $ o
-  ] ++ ( nestParams "RequestShippingServiceOptions."
+  ] ++ ( nestParams "ShippingServiceOptions."
        . fromMaybe [("", Nothing)]
        $ declaredValueToParams <$> declaredValue o )
 
@@ -650,6 +650,8 @@ makeQuery :: Endpoint -> Request
 makeQuery host = 
     setRequestMethod "POST"
   $ setRequestSecure True
+  $ setRequestPort 443
+  $ setRequestPath "/MerchantFulfillment/2015-06-01"
   $ setRequestHost (renderEndpoint host)
   $ defaultRequest
 
@@ -671,7 +673,7 @@ getEligibleShippingServices ep sk sid akid srds = do
   manager <- newManager $ managerSetProxy noProxy tlsManagerSettings
   setGlobalManager manager
   request <- getEligibleShippingServicesRequest ep sk sid akid srds <$> getCurrentTime
-  httpLBS (request { port = 443 })
+  httpLBS request
 
 getEligibleShippingServicesRequest ::
      Endpoint
@@ -721,7 +723,7 @@ genericQueryStringStart ::
 genericQueryStringStart ep =
      "POST\n"
   <> renderEndpoint ep
-  <> "\n/\n"
+  <> "\n/MerchantFulfillment/2015-06-01\n"
 
 genericParams :: UTCTime
               -> SellerId
