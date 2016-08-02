@@ -18,6 +18,7 @@ import Crypto.MAC.HMAC
 import Network.HTTP.Simple
 import Network.HTTP.Types.URI
 import Network.HTTP.Client
+import Network.HTTP.Client.TLS
 import Data.ByteString.Builder
 import Data.ByteString.Base64
 import qualified Data.ByteString.Lazy as LB
@@ -46,6 +47,7 @@ fromParam (name, value) =
 
 renderEndpoint :: Endpoint -> ByteString
 renderEndpoint NorthAmerica =
+  -- "mws.amazonservices.com"
   "mws.amazonservices.com"
 renderEndpoint Europe =
   "mws-eu.amazonservices.com"
@@ -124,7 +126,7 @@ itemToParams itemNumber item =
     , Just $ renderQuantity . quantity $ item ) ]
   where
     itemParam =
-         "Item."
+         "ItemList.Item."
       <> renderQuantity itemNumber
       <> "."
 
@@ -430,11 +432,11 @@ requestShippingServiceOptionsToParams ::
      ShippingServiceOptions
   -> [(ByteString, Maybe ByteString)]
 requestShippingServiceOptionsToParams o =
-  [ toParam "RequestShippingServiceOptions.DeliveryExperience" $
+  [ toParam "ShippingServiceOptions.DeliveryExperience" $
       Just . renderDeliveryExperience . deliveryExperience $ o
-  , toParam "RequestShippingServiceOptions.CarrierWillPickUp" $
+  , toParam "ShippingServiceOptions.CarrierWillPickUp" $
       Just . renderBool . carrierWillPickUp $ o
-  ] ++ ( nestParams "RequestShippingServiceOptions."
+  ] ++ ( nestParams "ShippingServiceOptions."
        . fromMaybe [("", Nothing)]
        $ declaredValueToParams <$> declaredValue o )
 
@@ -648,6 +650,8 @@ makeQuery :: Endpoint -> Request
 makeQuery host = 
     setRequestMethod "POST"
   $ setRequestSecure True
+  $ setRequestPort 443
+  $ setRequestPath "/MerchantFulfillment/2015-06-01"
   $ setRequestHost (renderEndpoint host)
   $ defaultRequest
 
@@ -665,8 +669,11 @@ getEligibleShippingServices ::
   -> AccessKeyId
   -> ShipmentRequestDetails
   -> IO (Response LB.ByteString)
-getEligibleShippingServices ep sk sid akid srds =
-  httpLBS =<< ( getEligibleShippingServicesRequest ep sk sid akid srds <$> getCurrentTime )
+getEligibleShippingServices ep sk sid akid srds = do
+  manager <- newManager $ managerSetProxy noProxy tlsManagerSettings
+  setGlobalManager manager
+  request <- getEligibleShippingServicesRequest ep sk sid akid srds <$> getCurrentTime
+  httpLBS request
 
 getEligibleShippingServicesRequest ::
      Endpoint
@@ -716,7 +723,7 @@ genericQueryStringStart ::
 genericQueryStringStart ep =
      "POST\n"
   <> renderEndpoint ep
-  <> "\n/\n"
+  <> "\n/MerchantFulfillment/2015-06-01\n"
 
 genericParams :: UTCTime
               -> SellerId
