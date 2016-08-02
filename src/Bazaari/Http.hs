@@ -432,11 +432,11 @@ requestShippingServiceOptionsToParams ::
      ShippingServiceOptions
   -> [(ByteString, Maybe ByteString)]
 requestShippingServiceOptionsToParams o =
-  [ toParam "RequestShippingServiceOptions.DeliveryExperience" $
+  [ toParam "ShippingServiceOptions.DeliveryExperience" $
       Just . renderDeliveryExperience . deliveryExperience $ o
-  , toParam "RequestShippingServiceOptions.CarrierWillPickUp" $
+  , toParam "ShippingServiceOptions.CarrierWillPickUp" $
       Just . renderBool . carrierWillPickUp $ o
-  ] ++ ( nestParams "RequestShippingServiceOptions."
+  ] ++ ( nestParams "ShippingServiceOptions."
        . fromMaybe [("", Nothing)]
        $ declaredValueToParams <$> declaredValue o )
 
@@ -651,6 +651,7 @@ makeQuery host =
     setRequestMethod "POST"
   $ setRequestSecure True
   $ setRequestPort 443
+  $ setRequestPath "/MerchantFulfillment/2015-06-01"
   $ setRequestHost (renderEndpoint host)
   $ defaultRequest
 
@@ -722,7 +723,7 @@ genericQueryStringStart ::
 genericQueryStringStart ep =
      "POST\n"
   <> renderEndpoint ep
-  <> "\n/\n"
+  <> "\n/MerchantFulfillment/2015-06-01\n"
 
 genericParams :: UTCTime
               -> SellerId

@@ -18,7 +18,7 @@ import qualified Data.ByteString.Lazy as LB
 sample_ShipmentRequestDetails :: ShipmentRequestDetails
 sample_ShipmentRequestDetails =
   ShipmentRequestDetails
-    { amazonOrderId = AmazonOrderId "123"
+    { amazonOrderId = AmazonOrderId "EYV-5491653-2834512"
     , sellerOrderId = Nothing
     , itemList =
       [ Item { orderItemId = OrderItemId "456", quantity = 2 }
@@ -61,11 +61,11 @@ sample_QueryString = do
   now <- getCurrentTime
   sellerId <- envBS "MWS_SELLER_ID"
   accessKeyId <- envBS "MWS_DEV_ACCESS_KEY_ID"
-  return ( "POST\nmws.amazonservices.com\n/\nAWSAccessKeyId="
+  return ( "POST\nmws.amazonservices.com\n/MerchantFulfillment/2015-06-01\nAWSAccessKeyId="
         <> accessKeyId
         <> "&Action=GetEligibleShippingServices&SellerId="
         <> sellerId
-        <> "&ShipmentRequestDetails.AmazonOrderId=123&ShipmentRequestDetails.ItemList.Item.1.OrderItemId=456&ShipmentRequestDetails.ItemList.Item.1.Quantity=2&ShipmentRequestDetails.ItemList.Item.2.OrderItemId=789&ShipmentRequestDetails.ItemList.Item.2.Quantity=1&ShipmentRequestDetails.MustArriveByUTCTime=2016-08-15T12%3A30%3A00.00Z&ShipmentRequestDetails.PackageDimensions.PredefinedPackageDimensions=FedEx_Tube&ShipmentRequestDetails.RequestShippingServiceOptions.CarrierWillPickUp=true&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.Amount=44.99&ShipmentRequestDetails.RequestShippingServiceOptions.DeclaredValue.CurrencyCode=USD&ShipmentRequestDetails.RequestShippingServiceOptions.DeliveryExperience=DeliveryConfirmationWithAdultSignature&ShipmentRequestDetails.ShipFromAddress.AddressLine1=123%20Anywhere%20Dr&ShipmentRequestDetails.ShipFromAddress.City=Somewheresville&ShipmentRequestDetails.ShipFromAddress.CountryCode=US&ShipmentRequestDetails.ShipFromAddress.Email=leslie_generic_1234%40somesite.com&ShipmentRequestDetails.ShipFromAddress.Name=Leslie%20Generic&ShipmentRequestDetails.ShipFromAddress.Phone=123-456-7890&ShipmentRequestDetails.ShipFromAddress.PostalCode=33133&ShipmentRequestDetails.ShipFromAddress.StateOrProvinceCode=FL&ShipmentRequestDetails.Weight.Unit=ounces&ShipmentRequestDetails.Weight.Value=30.5&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp="
+        <> "&ShipmentRequestDetails.AmazonOrderId=EYV-5491653-2834512&ShipmentRequestDetails.ItemList.Item.1.OrderItemId=456&ShipmentRequestDetails.ItemList.Item.1.Quantity=2&ShipmentRequestDetails.ItemList.Item.2.OrderItemId=789&ShipmentRequestDetails.ItemList.Item.2.Quantity=1&ShipmentRequestDetails.MustArriveByUTCTime=2016-08-15T12%3A30%3A00.00Z&ShipmentRequestDetails.PackageDimensions.PredefinedPackageDimensions=FedEx_Tube&ShipmentRequestDetails.ShipFromAddress.AddressLine1=123%20Anywhere%20Dr&ShipmentRequestDetails.ShipFromAddress.City=Somewheresville&ShipmentRequestDetails.ShipFromAddress.CountryCode=US&ShipmentRequestDetails.ShipFromAddress.Email=leslie_generic_1234%40somesite.com&ShipmentRequestDetails.ShipFromAddress.Name=Leslie%20Generic&ShipmentRequestDetails.ShipFromAddress.Phone=123-456-7890&ShipmentRequestDetails.ShipFromAddress.PostalCode=33133&ShipmentRequestDetails.ShipFromAddress.StateOrProvinceCode=FL&ShipmentRequestDetails.ShippingServiceOptions.CarrierWillPickUp=true&ShipmentRequestDetails.ShippingServiceOptions.DeclaredValue.Amount=44.99&ShipmentRequestDetails.ShippingServiceOptions.DeclaredValue.CurrencyCode=USD&ShipmentRequestDetails.ShippingServiceOptions.DeliveryExperience=DeliveryConfirmationWithAdultSignature&ShipmentRequestDetails.Weight.Unit=ounces&ShipmentRequestDetails.Weight.Value=30.5&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp="
         <> ( urlEncode True . renderUTCTime $ now )
         <>  "&Version=2015-06-01", now)
 
