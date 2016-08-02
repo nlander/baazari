@@ -3,6 +3,12 @@ sudo: false
 # Choose a lightweight base image; we provide our own build tools.
 language: c
 
+# we need GMP
+addons:
+  apt:
+    packages:
+      - libgmp3-dev
+
 # env:
 #  - GHCVER=7.10
 
